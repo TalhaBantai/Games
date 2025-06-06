@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+  #butt {
+  font-size: 289px;
+  text-align: center;
+  }
+
+  #ok {
+  font-size: 50px;
+  }
+  
+  h1 {
+    margin: 2px;
+  }
+  
+  h2 {
+    margin: 2px;
+    font-size: 10px;
+  }
+  
+  #stats {
+    font-size: 30px;
+  }
+  
+  #msg {
+    font-size: 10px;
+    margin: 0px;
+  }
+
+  .fadeout {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  }
+
+
+</style>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <h1>Sword Clicker</h1>
+  <h2>Designed and programmed By Talha Khan</h2>
+  <p id="stats"></p>
+  <button id="butt" onclick="clickIt()">🗡️</button>
+  <br>
+  <button id="ok"onclick="upgrade()"></button>
+  <p id="msg"></p>
+</body>
+<script>
+  let coins = 10;
+  let power = 1;
+  let cost = 10;
+
+  updateStats();
+
+  function updateStats() {
+  document.getElementById("stats").innerHTML = `🪙Coins: ${coins}<br>💪Power: ${power}`;
+
+  document.getElementById("ok").innerHTML = `Upgrade: ${cost} coins.`;
+
+  }
+  function clickIt() {
+  coins += power;
+  addText(`Collected ${power} coins`);
+  updateStats();
+  }
+
+  function upgrade() {
+  if (coins >= cost) {
+  coins -= cost;
+  cost = Math.floor(cost *= 1.5);
+  power += 2;
+  updateStats();
+  addText("Upgraded succesfully");
+
+  } else {
+  addText("Not enough Coins");
+  }
+
+
+  }
+
+  function addText(text) {
+  let msgBox = document.getElementById("msg");
+  let line = document.createElement("p");
+  line.innerText = text;
+  msgBox.appendChild(line);
+
+  setTimeout(() => {
+  line.classList.add("fadeout");
+  }, 250);
+
+  setTimeout(() => {
+  line.remove();
+  }, 750);
+  }
+
+
+</script>
+</html>
