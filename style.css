@@ -1,0 +1,437 @@
+@font-face {
+  font-family: 'PixelFont';
+  src: url('pixel.ttf') format('truetype');
+}
+
+body {
+  font-family: 'PixelFont', sans-serif;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  overflow-x: hidden;
+  background-repeat: no-repeat;
+  height: 100vh;
+}
+
+#btnReset {
+  background-color: red;
+  margin: 10px auto;
+  display: block;
+}
+
+h1, h2 {
+  margin: 5px;
+}
+
+h2 {
+  font-size: 12px;
+}
+
+#stats {
+  font-size: 24px;
+  margin: 10px 0;
+}
+
+#clickContainer {
+  position: relative;
+  display: inline-block;
+}
+
+#btnClick {
+  font-size: 150px;
+  margin: 10px 0;
+  border-radius: 20px;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+#catOnSword {
+  position: absolute;
+  width: 70px;
+  bottom: -9%;
+  left: -12%;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
+  display: none;
+}
+
+#buttonContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.gameButton {
+  font-family: 'PixelFont', sans-serif;
+  font-size: 18px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  height: 60px;
+}
+
+.gameButton:hover {
+  opacity: 0.9;
+}
+
+/* ===== THEMES ===== */
+body.default-theme {
+  background-image: linear-gradient( #0f2027, #203a43, #2c5364);
+  color: white;
+}
+
+body.pink-theme {
+  background-image: linear-gradient( #F564A9,#FFEDF3);
+  color: #4b004b;
+}
+
+body.red-theme {
+  background-image: linear-gradient( #2c0b0e, #551014);
+  color: #ffb6c1;
+}
+
+body.green-theme {
+  background-image: linear-gradient(#0a3d0a, #1e8449);
+  color: #e6f7e6;
+}
+
+/* ===== SHOP BOX THEMES ===== */
+.shopBox.default-theme {
+  background: rgba(30, 30, 30, 0.9);
+  border: 2px solid #517da2;
+}
+
+.shopBox.pink-theme {
+  background: rgba(255, 240, 250, 0.9);
+  border: 2px solid #ff9fd6;
+}
+
+.shopBox.red-theme {
+  background: rgba(60, 10, 10, 0.9);
+  border: 2px solid #ff5555;
+}
+
+.shopBox.green-theme {
+  background: rgba(10, 50, 10, 0.9);
+  border: 2px solid #27ae60;
+}
+
+/* ===== BUTTON THEMES ===== */
+.gameButton.default-theme {
+  background-color: #517da2;
+}
+.gameButton.default-theme:hover {
+  background-color: #395870;
+}
+
+.gameButton.pink-theme {
+  background-color: #ff9fd6;
+  color: #4b004b;
+}
+.gameButton.pink-theme:hover {
+  background-color: #ff69b4;
+}
+
+.gameButton.red-theme {
+  background-color: #8b0000;
+  color: #ffb6c1;
+}
+.gameButton.red-theme:hover {
+  background-color: #b22222;
+}
+
+.gameButton.green-theme {
+  background-color: #27ae60;
+  color: #e6f7e6;
+}
+.gameButton.green-theme:hover {
+  background-color: #219653;
+}
+
+#shopBox {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  width: 89vw;
+  height: 70vh;
+  padding: 20px;
+  box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+  overflow-y: auto;
+  z-index: 998;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  border-radius: 10px;
+}
+
+.floatText {
+  position: absolute;
+  font-size: 20px;
+  color: gold;
+  animation: floatUp 0.8s ease-out forwards;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+}
+
+#shopBox img {
+  width: 100px;
+  height: auto;
+  margin-bottom: 10px;
+  position: relative;
+  bottom: 50%;
+}
+
+#floatContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+#closeShopBtn {
+  position: sticky;
+  top: 2%;
+  left: 90%;
+  font-size: 20px;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+/* Theme-specific close buttons */
+.shopBox.default-theme #closeShopBtn {
+  background-color: #f05454;
+  color: white;
+}
+.shopBox.default-theme #closeShopBtn:hover {
+  background-color: #c73838;
+}
+
+.shopBox.pink-theme #closeShopBtn {
+  background-color: #ff69b4;
+  color: #4b004b;
+}
+.shopBox.pink-theme #closeShopBtn:hover {
+  background-color: #ff1493;
+}
+
+.shopBox.red-theme #closeShopBtn {
+  background-color: #8b0000;
+  color: #ffb6c1;
+}
+.shopBox.red-theme #closeShopBtn:hover {
+  background-color: #b22222;
+}
+
+.shopBox.green-theme #closeShopBtn {
+  background-color: #27ae60;
+  color: #e6f7e6;
+}
+.shopBox.green-theme #closeShopBtn:hover {
+  background-color: #219653;
+}
+
+.shopItem {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.shopItem img {
+  width: 100px;
+  height: auto;
+  margin: 0;
+}
+
+.shopDetails {
+  flex: 1;
+  max-width: 500px;
+}
+
+#btnBuyPet {
+  margin: 10px auto;
+  display: block;
+}
+
+.themebtn {
+  margin: 10px auto;
+  display: block;
+  color: white;
+}
+
+/* Theme-specific sword button */
+#btnClick.default-theme {
+  background-color: #517da2;
+}
+#btnClick.pink-theme {
+  background-color: #ff9fd6;
+}
+#btnClick.red-theme {
+  background-color: #8b0000;
+}
+#btnClick.green-theme {
+  background-color: #27ae60;
+}
+
+#catOnSword {
+  z-index: 10;
+  position: absolute;
+  pointer-events: auto;
+}
+
+#audio-controls {
+  position: absolute;
+  bottom: 10px; /* This is 26px below the sheep (56px - 30px gap = 26px) */
+  left: 20px; /* Align horizontally under the sheep */
+  display: flex;
+  gap: 10px;
+  z-index: 50;
+}
+
+#audio-controls button {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 12px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  position: relative; /* relative to #audio-controls' flex layout */
+}
+
+#audio-controls button:hover {
+}
+#grass {
+  width: 100%;
+  height: 100px;
+  position: absolute; /* fixed to stay at the bottom */
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
+  display: none;
+}
+
+.grass-tile-left {
+  height: 100px;
+  width: auto;
+  object-fit: cover;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+
+.grass-tile-right {
+  height: 100px;
+  width: auto;
+  object-fit: cover;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  transform: scaleX(-1); /* Mirror the image */
+}
+
+#sheepPet {
+  position: absolute;
+  width: 60px;
+  height: auto;
+  bottom: 56px;
+  left: 120px;
+  z-index: 99;
+  display: none;
+}
+
+.green-theme #sheepPet {
+  bottom: 10px; /* raise it a bit for the grass */
+  left: 250px;
+  z-index: 100;
+}
+
+/* Pet Box - matches shop styling */
+#petBox {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  width: 89vw;
+  height: 70vh;
+  padding: 20px;
+  box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+  overflow-y: auto;
+  z-index: 998; /* Same as shop */
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  border-radius: 10px 10px 0 0;
+}
+
+/* Close button styling to match shop */
+#closePetBtn {
+  position: sticky;
+  top: 2%;
+  left: 95%;
+  font-size: 20px;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+/* Theme variants for pet box */
+.petBox.default-theme {
+  background: rgba(30, 30, 30, 0.9);
+  border: 2px solid #517da2;
+}
+.petBox.pink-theme {
+  background: rgba(255, 240, 250, 0.9);
+  border: 2px solid #ff9fd6;
+}
+.petBox.red-theme {
+  background: rgba(60, 10, 10, 0.9);
+  border: 2px solid #ff5555;
+}
+.petBox.green-theme {
+  background: rgba(10, 50, 10, 0.9);
+  border: 2px solid #27ae60;
+}
+
+/* Pet section headers */
+.pet-section h4 {
+  margin: 15px 0 5px 0;
+  font-size: 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  padding-bottom: 5px;
+}
+
+#shopCatText button, #shopSheepText button {
+    margin-top: 10px;
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
