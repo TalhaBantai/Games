@@ -1,5 +1,5 @@
 // Game state variables
-let coins = 0;
+let coins = 5000000000;
 let power = 1;
 let cost = 10;
 let petOwned = false;
@@ -23,11 +23,11 @@ let petSpeedCost = 4000; // 50% more than petUpgradeCost
 let sheepSpeedCost = 15000; // 50% more than sheepCost
 
 // Max stats constants
-const MAX_POWER = 50;
-const MAX_PET_STRENGTH = 40;
-const MAX_SHEEP_STRENGTH = 300;
-const MIN_PET_TIME = 200; // 0.3 seconds
-const MIN_SHEEP_TIME = 700; // 3 seconds
+const MAX_POWER = 60;
+const MAX_PET_STRENGTH = 90;
+const MAX_SHEEP_STRENGTH = 450;
+const MIN_PET_TIME = 100; // 0.3 seconds
+const MIN_SHEEP_TIME = 500; // 3 seconds
 
 const musicButton = document.getElementById('toggle-music');
 const soundButton = document.getElementById('toggle-sound');
@@ -51,16 +51,16 @@ function buySheep() {
     
     if (coins >= sheepCost) {
         coins -= sheepCost;
-        sheepCost = Math.floor(sheepCost * 1.3);
+        sheepCost = Math.floor(sheepCost * 1.2);
         sheepOwned = true;
-        sheepMultiplier = Math.min(MAX_SHEEP_STRENGTH, sheepMultiplier + 20);
+        sheepMultiplier = Math.min(MAX_SHEEP_STRENGTH, sheepMultiplier + 10);
         saveGame();
         updShop();
         spawnFloatText(window.innerWidth / 2, window.innerHeight / 2, "Upgrade Successful");
         if (!soundMuted) sndBaa.play();
 
         document.getElementById("btnBuySheep").innerText = sheepMultiplier >= MAX_SHEEP_STRENGTH ? 
-            "Max Strength" : `Upgrade: ${sheepCost}`;
+            "Max Strength" : `Strength: ${sheepCost} coins`;
         
         const sheepImg = document.getElementById("sheepPet");
         sheepImg.style.display = "block";
@@ -92,7 +92,7 @@ function buyPet() {
     
     if (coins >= petUpgradeCost) {
         coins -= petUpgradeCost;
-        petUpgradeCost = Math.floor(petUpgradeCost * 1.35);
+        petUpgradeCost = Math.floor(petUpgradeCost * 1.2);
         petOwned = true;
         petMultiplier = Math.min(MAX_PET_STRENGTH, petMultiplier + 2);
         saveGame();
@@ -101,7 +101,7 @@ function buyPet() {
         
         if (!soundMuted) sndMeow.play();
         document.getElementById("btnBuyPet").innerText = petMultiplier >= MAX_PET_STRENGTH ? 
-            "Max Strength" : `Upgrade Pet: ${petUpgradeCost} coins`;
+            "Max Strength" : `Strength: ${petUpgradeCost} coins`;
         spawnFloatText(window.innerWidth / 2, window.innerHeight / 2, "Pet upgraded!");
         document.getElementById("btnPinkTheme").innerText = "Apply Pink Theme";
         
@@ -162,14 +162,7 @@ function initGame() {
     
     // Set up auto-save
     setInterval(saveGame, 30000);
-    
-    // Add this near your other interval declarations
-// Add this in your initGame() function
     updateStats();
-  
-  // ... existing init code ...
-
-  // Random pet noises with floating text from pet positions
   setInterval(function() {
     if ((!petOwned && !sheepOwned) || soundMuted) return;
     
@@ -212,14 +205,14 @@ function updShop() {
         petSection.innerHTML = "Buy the Cat to help collect Coins.<br>";
     } else {
         document.getElementById("btnBuyPet").innerText = petMultiplier >= MAX_PET_STRENGTH ? 
-            "Max Strength" : `Strength: ${petUpgradeCost}`;
+            "Max Strength" : `Strength: ${petUpgradeCost} coins`;
             
         petSection.innerHTML = `
             Strength: ${petMultiplier}<br>
             Speed: ${(petTime/1000).toFixed(1)}s <br>
             ${petTime > MIN_PET_TIME ? 
                 `<button class="gameButton ${currentTheme}-theme" onclick="upgradePetSpeed()">
-                    Speed: ${petSpeedCost}
+                    Speed: ${petSpeedCost} coins
                 </button>` : 
                 `<button class="gameButton ${currentTheme}-theme" disabled>
                     Max Speed
@@ -247,6 +240,15 @@ function updShop() {
                     Max Speed
                 </button>`}
         `;
+        const SHEEP = document.getElementById("btnBuySheep");
+        if (MAX_SHEEP_STRENGTH <= sheepMultiplier) {
+          SHEEP.innerText = "Max strength";
+        } else if (!sheepOwned) {
+          SHEEP.innerText = "Buy: 20000";
+        } else {
+          SHEEP.innerText = `Strength: ${sheepCost}`;
+        }
+        
     }
   
     // Theme buttons
@@ -579,7 +581,7 @@ function upgradePetSpeed() {
     if (coins >= petSpeedCost && petOwned) {
         coins -= petSpeedCost;
         petTime = Math.max(MIN_PET_TIME, petTime - 100);
-        petSpeedCost = Math.floor(petSpeedCost * 1.75); // 75% increase
+        petSpeedCost = Math.floor(petSpeedCost * 2.5); // 75% increase
         
         clearInterval(autoInterval);
         autoInterval = setInterval(() => {
@@ -611,7 +613,7 @@ function upgradeSheepSpeed() {
     if (coins >= sheepSpeedCost && sheepOwned) {
         coins -= sheepSpeedCost;
         sheepTime = Math.max(MIN_SHEEP_TIME, sheepTime - 1000);
-        sheepSpeedCost = Math.floor(sheepSpeedCost * 1.40); // 75% increase
+        sheepSpeedCost = Math.floor(sheepSpeedCost * 3); // 75% increase
         
         clearInterval(sheepAutoInterval);
         sheepAutoInterval = setInterval(() => {
