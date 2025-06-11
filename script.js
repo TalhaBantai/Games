@@ -1,5 +1,5 @@
 // Game state variables
-let coins = 5000000000;
+let coins = 0;
 let power = 1;
 let cost = 10;
 let petOwned = false;
