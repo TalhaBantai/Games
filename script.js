@@ -24,10 +24,12 @@ let sheepSpeedCost = 15000;
 let playerName = "";
 let currentScoreSubmitted = false;
 
+document.getElementById("playerName").disabled = false;
+document.getElementById("playerPassword").disabled = false;
 // Max stats constants
-const MAX_POWER = 60;
-const MAX_PET_STRENGTH = 90;
-const MAX_SHEEP_STRENGTH = 450;
+const MAX_POWER = 70;
+const MAX_PET_STRENGTH = 100;
+const MAX_SHEEP_STRENGTH = 550;
 const MIN_PET_TIME = 100; // 0.3 seconds
 const MIN_SHEEP_TIME = 500; // 3 seconds
 
@@ -406,6 +408,8 @@ function applyTheme(theme) {
     document.getElementById(
         "leaderboardBox"
     ).className = `shopBox ${theme}-theme`;
+    document.getElementById("loginScreen").className = `shopBox ${theme}-theme`;
+    document.getElementById("body").className = `${theme}-theme`;
     document.getElementById(
         "submitScoreForm"
     ).className = `shopBox ${theme}-theme`;
@@ -502,145 +506,170 @@ function buyGreenTheme() {
 
 // Save game state
 function saveGame() {
+    if (!playerName || !playerPassword) return;
+
+    const safeName = playerName.replace(/[^a-zA-Z0-9_-]/g, "_");
+
     const gameState = {
-        coins: coins,
-        power: power,
-        cost: cost,
-        petOwned: petOwned,
-        petUpgradeCost: petUpgradeCost,
-        petMultiplier: petMultiplier,
-        petTime: petTime,
-        petSpeedCost: petSpeedCost,
-        redThemeOwned: redThemeOwned,
-        greenThemeOwned: greenThemeOwned,
-        currentTheme: currentTheme,
-        sheepCost: sheepCost,
-        sheepMultiplier: sheepMultiplier,
-        sheepOwned: sheepOwned,
-        sheepTime: sheepTime,
-        sheepSpeedCost: sheepSpeedCost,
+        coins,
+        power,
+        cost,
+        petOwned,
+        petUpgradeCost,
+        petMultiplier,
+        petTime,
+        petSpeedCost,
+        redThemeOwned,
+        greenThemeOwned,
+        currentTheme,
+        sheepCost,
+        sheepMultiplier,
+        sheepOwned,
+        sheepTime,
+        sheepSpeedCost,
         version: 2
     };
-    localStorage.setItem("swordClickerSave", JSON.stringify(gameState));
 
-    localStorage.setItem("swordClickerSave", JSON.stringify(gameState));
+    // ☁️ Save game to cloud
+    database.ref("users/" + safeName + "/data").set(gameState);
 
-    // ✅ NEW: Save name if it's set
-    if (playerName) {
-        localStorage.setItem("playerName", playerName);
-    }
+    // 🏆 Check and update leaderboard only if current score is higher
+    const leaderboardRef = database.ref("leaderboard/" + safeName);
+    leaderboardRef.once("value").then(snapshot => {
+        const existing = snapshot.val();
+        if (!existing || coins > existing.score) {
+            leaderboardRef.set({
+                name: playerName,
+                score: coins,
+                timestamp: Date.now()
+            });
+        }
+    });
 }
-
 // Load game state
 function loadGame() {
-    const savedGame = localStorage.getItem("swordClickerSave");
-    if (savedGame) {
-        try {
-            const gameState = JSON.parse(savedGame);
+    if (!playerName || !playerPassword) return;
 
-            // Load all game state variables
-            coins = gameState.coins || 0;
-            power = gameState.power || 1;
-            cost = gameState.cost || 10;
-            petOwned = gameState.petOwned || false;
-            petUpgradeCost = gameState.petUpgradeCost || 1000;
-            petMultiplier = gameState.petMultiplier || 2;
-            petTime = gameState.petTime || 1000;
-            petSpeedCost = gameState.petSpeedCost || 4000;
-            redThemeOwned = gameState.redThemeOwned || false;
-            greenThemeOwned = gameState.greenThemeOwned || false;
-            currentTheme = gameState.currentTheme || "default";
-            sheepCost = gameState.sheepCost || 20000;
-            sheepMultiplier = gameState.sheepMultiplier || 145;
-            sheepOwned = gameState.sheepOwned || false;
-            sheepTime = gameState.sheepTime || 6000;
-            sheepSpeedCost = gameState.sheepSpeedCost || 15000;
+    const safeName = playerName.replace(/[^a-zA-Z0-9_-]/g, "_");
+    const userRef = database.ref("users/" + safeName);
 
-            // Apply cat state
-            if (petOwned) {
-                document.getElementById("catOnSword").style.display = "block";
-                unlockPinkTheme();
-
-                if (!autoInterval) {
-                    autoInterval = setInterval(() => {
-                        coins += power * petMultiplier;
-                        updateStats();
-                        const sword = document.getElementById("btnClick");
-                        const rect = sword.getBoundingClientRect();
-                        const x = rect.left + rect.width / 2;
-                        const y = rect.top + rect.height / 2;
-                        spawnFloatText(x, y, `+${power * petMultiplier}`);
-                    }, petTime);
-                }
-            }
-
-            // Apply sheep state
-            if (sheepOwned) {
-                document.getElementById("sheepPet").style.display = "block";
-
-                if (!sheepAutoInterval) {
-                    sheepAutoInterval = setInterval(() => {
-                        coins += power * sheepMultiplier;
-                        updateStats();
-                        const sword = document.getElementById("btnClick");
-                        const rect = sword.getBoundingClientRect();
-                        const x = rect.left + rect.width / 2;
-                        const y = rect.top + rect.height / 2;
-                        spawnFloatText(x, y, `+${power * sheepMultiplier}`);
-                    }, sheepTime);
-                }
-            }
-
-            // Apply themes
-            if (redThemeOwned) {
-                document.getElementById("btnRedTheme").innerText =
-                    "Apply Red Theme";
-            }
-
-            if (greenThemeOwned) {
-                document.getElementById("btnGreenTheme").innerText =
-                    "Apply Green Theme";
-            }
-
-            if (currentTheme === "green") {
-                document.getElementById("grass").style.display = "block";
+    userRef
+        .once("value")
+        .then(snapshot => {
+            const data = snapshot.val();
+            if (data && data.password === playerPassword && data.data) {
+                const gameState = data.data;
+                applyGameState(gameState);
             } else {
-                document.getElementById("grass").style.display = "none";
+                console.warn("No valid cloud save, checking localStorage...");
+                const localData = JSON.parse(
+                    localStorage.getItem("playerData")
+                );
+                if (localData) {
+                    applyGameState(localData);
+                } else {
+                    console.warn("No local save found either.");
+                }
             }
-
-            applyTheme(currentTheme);
-            // ✅ NEW: Load saved name
-            const savedName = localStorage.getItem("playerName");
-            if (savedName) {
-                playerName = savedName;
-                currentScoreSubmitted = true; // Player already submitted score
-                document.getElementById("playerName").value = playerName;
-                document.getElementById("playerName").disabled = true; // Optional
+        })
+        .catch(err => {
+            console.error("Cloud load failed, using local:", err);
+            const localData = JSON.parse(localStorage.getItem("playerData"));
+            if (localData) {
+                applyGameState(localData);
             }
-            updateStats();
-            updShop();
-        } catch (e) {
-            console.error("Error loading save:", e);
-        }
-    }
+        });
 }
 
+function applyGameState(gameState) {
+    coins = gameState.coins || 0;
+    power = gameState.power || 1;
+    cost = gameState.cost || 10;
+    petOwned = gameState.petOwned || false;
+    petUpgradeCost = gameState.petUpgradeCost || 1000;
+    petMultiplier = gameState.petMultiplier || 2;
+    petTime = gameState.petTime || 1000;
+    petSpeedCost = gameState.petSpeedCost || 4000;
+    redThemeOwned = gameState.redThemeOwned || false;
+    greenThemeOwned = gameState.greenThemeOwned || false;
+    currentTheme = gameState.currentTheme || "default";
+    sheepCost = gameState.sheepCost || 20000;
+    sheepMultiplier = gameState.sheepMultiplier || 145;
+    sheepOwned = gameState.sheepOwned || false;
+    sheepTime = gameState.sheepTime || 6000;
+    sheepSpeedCost = gameState.sheepSpeedCost || 15000;
+
+    applyTheme(currentTheme);
+    updateStats();
+    updShop();
+    // Apply cat state
+    if (petOwned) {
+        document.getElementById("catOnSword").style.display = "block";
+        unlockPinkTheme();
+
+        if (!autoInterval) {
+            autoInterval = setInterval(() => {
+                coins += power * petMultiplier;
+                updateStats();
+                const sword = document.getElementById("btnClick");
+                const rect = sword.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+                spawnFloatText(x, y, `+${power * petMultiplier}`);
+            }, petTime);
+        }
+    }
+
+    // Apply sheep state
+    if (sheepOwned) {
+        document.getElementById("sheepPet").style.display = "block";
+
+        if (!sheepAutoInterval) {
+            sheepAutoInterval = setInterval(() => {
+                coins += power * sheepMultiplier;
+                updateStats();
+                const sword = document.getElementById("btnClick");
+                const rect = sword.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+                spawnFloatText(x, y, `+${power * sheepMultiplier}`);
+            }, sheepTime);
+        }
+    }
+
+    // Apply themes
+    if (redThemeOwned) {
+        document.getElementById("btnRedTheme").innerText = "Apply Red Theme";
+    }
+
+    if (greenThemeOwned) {
+        document.getElementById("btnGreenTheme").innerText =
+            "Apply Green Theme";
+    }
+
+    if (currentTheme === "green") {
+        document.getElementById("grass").style.display = "block";
+    } else {
+        document.getElementById("grass").style.display = "none";
+    }
+
+    applyTheme(currentTheme);
+}
 // Reset game
 function resetGame() {
-    if (confirm("Are you sure you want to reset all progress?")) {
-        // 🧹 Clear game save
+    if (confirm("Are you sure you want to log Out?")) {
         localStorage.removeItem("swordClickerSave");
-
-        // 🧹 Clear player info (name + password)
+        localStorage.removeItem("playerInfo");
         localStorage.removeItem("playerData");
 
-        // ✅ Re-enable input fields
+        playerName = null;
+        playerPassword = null;
+
         document.getElementById("playerName").disabled = false;
         document.getElementById("playerPassword").disabled = false;
         document.getElementById("playerName").value = "";
         document.getElementById("playerPassword").value = "";
 
-        // Reload the page after clearing everything
         location.reload();
     }
 }
@@ -808,10 +837,7 @@ function hideCredits() {
 
 // Get top scores
 function getLeaderboard(callback) {
-    const leaderboardRef = database
-        .ref("leaderboard")
-        .orderByChild("score")
-        .limitToLast(10); // Get top 10 scores
+    const leaderboardRef = database.ref("leaderboard").orderByChild("score");
 
     leaderboardRef.once("value", snapshot => {
         const scores = [];
@@ -838,7 +864,6 @@ function toggleLeaderboard() {
     }
     if (!soundMuted) sndClick.play();
     if (currentScoreSubmitted) {
-        document.getElementById("playerName").disabled = true;
     }
 }
 
@@ -869,38 +894,84 @@ function getCurrentScore() {
     return coins;
 }
 // Submit player score
-function submitScore() {
-    const playerName = document.getElementById("playerName").value.trim();
-    const password = document.getElementById("playerPassword").value.trim();
-    const score = getCurrentScore(); // Your coin or score logic
+function loginOrRegister() {
+    const nameInput = document.getElementById("playerName");
+    const passInput = document.getElementById("playerPassword");
 
-    if (!playerName || !password) {
-        alert("Enter name and password first.");
+    // Just to be safe: ensure inputs are editable
+    nameInput.disabled = false;
+    passInput.disabled = false;
+
+    const name = nameInput.value.trim();
+    const pass = passInput.value.trim();
+
+    if (!name || !pass) {
+        alert("Enter name and password");
         return;
     }
 
-    const safeName = playerName.replace(/[^a-zA-Z0-9_-]/g, "_");
-    const playerRef = database.ref("leaderboard/" + safeName);
+    const safeName = name.replace(/[^a-zA-Z0-9_-]/g, "_");
+    const userRef = database.ref("users/" + safeName);
 
-    playerRef.once("value").then(snapshot => {
-        const existingData = snapshot.val();
+    document.getElementById("loadingText").style.display = "block"; // Show loading
 
-        if (existingData) {
-            // 🔐 If name exists, password must match
-            if (existingData.password && existingData.password === password) {
-                enableScoreSubmission(playerName, password, score);
+    userRef
+        .once("value")
+        .then(snapshot => {
+            const userData = snapshot.val();
+
+            if (userData) {
+                if (userData.password === pass) {
+                    // ✅ Valid login
+                    playerName = name;
+                    playerPassword = pass;
+                    currentScoreSubmitted = true;
+                    localStorage.setItem(
+                        "playerInfo",
+                        JSON.stringify({ name, password: pass })
+                    );
+                    loadGame();
+                    showGameUI(); // 👈 Make sure game is shown
+                } else {
+                    alert("Password incorrect");
+                }
             } else {
-                alert("Name already taken or password is incorrect.");
+                // 🆕 New user
+                userRef
+                    .set({
+                        password: pass,
+                        data: {}
+                    })
+                    .then(() => {
+                        playerName = name;
+                        playerPassword = pass;
+                        currentScoreSubmitted = true;
+                        localStorage.setItem(
+                            "playerInfo",
+                            JSON.stringify({ name, password: pass })
+                        );
+                        saveGame();
+                        alert("Account created. Starting new game.");
+                        showGameUI(); // 👈 Show game UI after new account
+                    });
             }
-        } else {
-            // 🆕 First time user
-            localStorage.setItem(
-                "playerData",
-                JSON.stringify({ name: playerName, password: password })
-            );
-            enableScoreSubmission(playerName, password, score);
-        }
-    });
+        })
+        .finally(() => {
+            document.getElementById("loadingText").style.display = "none"; // Hide loading
+        });
+}
+
+function showGameUI() {
+    document.getElementById("gameUI").style.display = "block";
+    document.getElementById("loginScreen").style.display = "none";
+
+    document.getElementById("loadingText").style.display = "none";
+}
+
+function showLoading(show) {
+    document.getElementById("loadingText").style.display = show
+        ? "block"
+        : "none";
 }
 
 function enableScoreSubmission(name, pass, score) {
@@ -916,8 +987,7 @@ function enableScoreSubmission(name, pass, score) {
         })
         .then(() => {
             // Disable name and password inputs after successful submission
-            document.getElementById("playerName").disabled = true;
-            document.getElementById("playerPassword").disabled = true;
+
             showLeaderboard();
         });
 }
@@ -931,18 +1001,36 @@ database
 
 window.addEventListener("load", () => {
     const savedInfo = JSON.parse(localStorage.getItem("playerInfo"));
-    if (savedInfo) {
+    if (savedInfo && savedInfo.name && savedInfo.password) {
         document.getElementById("playerName").value = savedInfo.name;
         document.getElementById("playerPassword").value = savedInfo.password;
 
-        document.getElementById("playerName").disabled = true;
-        document.getElementById("playerPassword").disabled = true;
+        // ❌ Don't disable inputs anymore
+        // If you still want to disable only for valid data, you can enable this:
+        // document.getElementById("playerName").disabled = true;
+        // document.getElementById("playerPassword").disabled = true;
+    } else {
+        // 🧹 Just make sure inputs are enabled
+        document.getElementById("playerName").disabled = false;
+        document.getElementById("playerPassword").disabled = false;
     }
 });
 
-window.addEventListener("DOMContentLoaded", () => {
-    const playerInfo = JSON.parse(localStorage.getItem("playerInfo") || "{}");
-    if (playerInfo.name === "Talha") {
-        document.getElementById("resetBtn").style.display = "block";
+setInterval(() => {
+    if (playerName && playerPassword) {
+        saveGame();
+    }
+}, 30000); // Every 30 seconds
+
+window.addEventListener("load", () => {
+    const savedInfo = JSON.parse(localStorage.getItem("playerInfo"));
+    if (savedInfo && savedInfo.name && savedInfo.password) {
+        setTimeout(() => {
+            document.getElementById("playerName").value = savedInfo.name;
+            document.getElementById("playerPassword").value =
+                savedInfo.password;
+            showLoading(true);
+            loginOrRegister();
+        }, 200);
     }
 });

@@ -551,32 +551,36 @@ body.green-theme {
 
 /* Leaderboard Styles */
 #leaderboardBox {
-    display: none;
     position: fixed;
-    top: 10%;
+    top: 5vh; /* 👈 Slightly lower than top */
     left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 500px;
-    height: 80vh;
-    overflow-y: auto;
-    background: rgba(0, 0, 0, 0.8);
+    transform: translateX(-50%); /* 👈 Perfect horizontal center */
+    width: 95vw;
+    max-height: 90vh; /* 👈 Almost full height of screen */
+    overflow-y: auto; /* Enable vertical scrolling */
+
+    padding: 10px;
+    z-index: 999999;
+    background-color: rgba(0, 0, 0, 0.7); /* Slightly darker */
     border: 2px solid white;
     border-radius: 10px;
-    padding: 15px;
-    z-index: 99999;
-    font-family: "PixelFont", sans-serif;
-}
-
-#leaderboardList {
-    margin: 10px 0;
+    color: #fff;
+    font-family: "pixel", sans-serif;
+    display: none;
 }
 
 .leaderboard-entry {
     display: flex;
-    justify-content: space-between;
-    padding: 6px 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: space-between; /* Keeps name on left, score on right */
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    color: #f1f1f1;
+    text-align: left;
+    font-size: 16px;
+    white-space: nowrap; /* Prevents name from wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Shows ... if too long */
 }
 
 #submitScoreForm {
@@ -605,4 +609,256 @@ body.green-theme {
 #leaderboardBox::-webkit-scrollbar-thumb {
     background: white;
     border-radius: 3px;
+}
+
+/* Login Screen - Base Style */
+/* Login Screen Styling */
+#loginScreen {
+    width: 95vw;
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 30px 20px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    font-family: "PixelFont", sans-serif;
+    transition:
+        background 0.6s ease,
+        color 0.6s ease;
+    animation: fadeInUp 0.8s ease;
+    box-sizing: border-box;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Input and Button Styling */
+#loginScreen input,
+#loginScreen button {
+    font-family: "PixelFont", sans-serif;
+}
+
+#loginScreen input {
+    display: block;
+    width: 90%;
+    margin: 12px auto;
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none; /* Bright readable font for leaderboard */
+}
+#leaderboardBox {
+    font-family: "PixelFont", sans-serif;
+    color: white; /* Fallback color */
+}
+
+/* Theme-based overrides */
+.default-theme #leaderboardBox {
+    color: #cceeff; /* bright sky blue */
+}
+
+.pink-theme #leaderboardBox {
+    color: #ffe6fa; /* light pink */
+}
+
+.red-theme #leaderboardBox {
+    color: #ffcccc; /* soft rose */
+}
+
+.green-theme #leaderboardBox {
+    color: #ccffe6; /* mint green */
+}
+
+/* Entry Styling - keeps background subtle and text clean */
+.leaderboard-entry {
+    color: inherit;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Heading */
+#leaderboardBox h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: inherit;
+}
+
+/* Scrollbar */
+#leaderboardBox::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.7);
+}
+outline: none;
+box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.1);
+box-sizing: border-box;
+/* Bright readable font for leaderboard */
+#leaderboardBox {
+    font-family: "PixelFont", sans-serif;
+    color: white; /* Fallback color */
+}
+
+/* Theme-based overrides */
+.default-theme #leaderboardBox {
+    color: #cceeff; /* bright sky blue */
+}
+
+.pink-theme #leaderboardBox {
+    color: #ffe6fa; /* light pink */
+}
+
+.red-theme #leaderboardBox {
+    color: #ffcccc; /* soft rose */
+}
+
+.green-theme #leaderboardBox {
+    color: #ccffe6; /* mint green */
+}
+
+/* Entry Styling - keeps background subtle and text clean */
+.leaderboard-entry {
+    color: inherit;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Heading */
+#leaderboardBox h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: inherit;
+}
+
+/* Scrollbar */
+#leaderboardBox::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+#loginScreen button {
+    margin-top: 18px;
+    padding: 12px 24px;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition:
+        background 0.3s,
+        transform 0.2s;
+}
+
+#loginScreen button:hover {
+    transform: scale(1.05);
+}
+
+/* THEME STYLES WITH GRADIENTS */
+.default-theme {
+    background: linear-gradient(135deg, #c9e4f6, #eefaff);
+    color: #003f5c;
+}
+.default-theme input,
+.default-theme button {
+    background: #ffffff;
+    color: #003f5c;
+}
+
+.pink-theme {
+    background: linear-gradient(135deg, #ffd1dc, #ffe6f2);
+    color: #800040;
+}
+.pink-theme input,
+.pink-theme button {
+    background: #fff0f8;
+    color: #800040;
+}
+
+.red-theme {
+    background: linear-gradient(135deg, #ffb3b3, #ffe6e6);
+    color: #7f0000;
+}
+.red-theme input,
+.red-theme button {
+    background: #fffafa;
+    color: #7f0000;
+}
+
+.green-theme {
+    background: linear-gradient(135deg, #b3ffd9, #e0fff0);
+    color: #004d00;
+}
+.green-theme input,
+.green-theme button {
+    background: #f0fff4;
+    color: #004d00;
+}
+/* Bright readable font for leaderboard */
+
+#leaderboardBox {
+    font-family: "PixelFont", sans-serif;
+    color: white; /* Fallback color */
+}
+
+/* Theme-based overrides */
+.default-theme #leaderboardBox {
+    color: #cceeff; /* bright sky blue */
+}
+
+.pink-theme #leaderboardBox {
+    color: #ffe6fa; /* light pink */
+}
+
+.red-theme #leaderboardBox {
+    color: #ffcccc; /* soft rose */
+}
+
+.green-theme #leaderboardBox {
+    color: #ccffe6; /* mint green */
+}
+
+/* Entry Styling - keeps background subtle and text clean */
+.leaderboard-entry {
+    color: inherit;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Heading */
+#leaderboardBox h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: inherit;
+}
+
+/* Scrollbar */
+#leaderboardBox::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+/* Default theme shop text */
+.default-theme #shopBox {
+    color: #cceeff; /* soft sky blue */
+}
+
+/* Pink theme */
+/* Pink theme - improved readable text */
+.pink-theme #shopBox {
+    color: #5a0033; /* deep berry - strong contrast on pink */
+}
+
+/* Red theme */
+.red-theme #shopBox {
+    color: #ffcccc; /* pale rose */
+}
+
+/* Green theme */
+.green-theme #shopBox {
+    color: #ccffe6; /* mint green */
 }

@@ -9,272 +9,305 @@
         <title>Sword Clicker -By Talha Khan</title>
         <link rel="stylesheet" href="style.css" />
     </head>
-    <body class="default-theme">
-        <h1>Sword Clicker</h1>
-        <h2>Designed and programmed by Talha Khan</h2>
 
-        <p id="stats"></p>
-
-        <div id="clickContainer">
-            <button
-                id="btnClick"
-                class="default-theme"
-                onclick="clickIt(event)"
-            >
-                🗡️
-            </button>
-            <img id="catOnSword" src="cat.png" alt="Cat on Sword" />
+    <body class="default-theme" id="body">
+        <!-- LOGIN SCREEN (shown on game start) -->
+        <div id="loginScreen" class="shopBox default-theme">
+            <h2>Login or Register</h2>
+            <input
+                type="text"
+                id="playerName"
+                placeholder="Enter Your Name"
+            /><br />
+            <input
+                type="password"
+                id="playerPassword"
+                placeholder="Enter Password"
+            /><br />
+            <button onclick="loginOrRegister()">Enter Game</button>
         </div>
+        <div id="loadingText" style="display: none">Entering the game...</div>
+        <div id="gameUI" style="display: none">
+            <!-- all your existing game UI goes here -->
 
-        <div id="buttonContainer">
-            <button
-                id="btnUpgrade"
-                class="gameButton default-theme"
-                onclick="upgrade(event)"
-            >
-                Upgrade
-            </button>
-            <button
-                id="btnShop"
-                class="gameButton default-theme"
-                onclick="toggleShop()"
-            >
-                🛒 Shop
-            </button>
-            <button
-                id="btnPet"
-                class="gameButton default-theme"
-                onclick="petBox()"
-            >
-                Pets
-            </button>
-            <!-- Leaderboard Button -->
-            <button
-                id="btnLeaderboard"
-                class="gameButton default-theme"
-                onclick="toggleLeaderboard()"
-            >
-                🏆 Leaderboard
-            </button>
+            <h1>Sword Clicker</h1>
+            <h2>Designed and programmed by Talha Khan</h2>
 
-            <!-- Leaderboard Popup -->
-            <div id="leaderboardBox" class="shopBox default-theme">
-                <button onclick="toggleLeaderboard()" id="closeLeaderboardBtn">
-                    ❌
+            <p id="stats"></p>
+
+            <div id="clickContainer">
+                <button
+                    id="btnClick"
+                    class="default-theme"
+                    onclick="clickIt(event)"
+                >
+                    🗡️
+                </button>
+                <img id="catOnSword" src="cat.png" alt="Cat on Sword" />
+            </div>
+
+            <div id="buttonContainer">
+                <button
+                    id="btnUpgrade"
+                    class="gameButton default-theme"
+                    onclick="upgrade(event)"
+                >
+                    Upgrade
+                </button>
+                <button
+                    id="btnShop"
+                    class="gameButton default-theme"
+                    onclick="toggleShop()"
+                >
+                    🛒 Shop
+                </button>
+                <button
+                    id="btnPet"
+                    class="gameButton default-theme"
+                    onclick="petBox()"
+                >
+                    Pets
+                </button>
+                <!-- Leaderboard Button -->
+                <button
+                    id="btnLeaderboard"
+                    class="gameButton default-theme"
+                    onclick="toggleLeaderboard()"
+                >
+                    🏆 Leaderboard
                 </button>
 
-                <h2>Top Players</h2>
-                <div id="leaderboardList"></div>
-
-                <!-- Submit Score Form (only shows if not submitted) -->
-                <div
-                    id="submitScoreForm"
-                    class="shopBox default-theme"
-                    style="display: none"
-                >
-                    <h3>
-                        Submit Your Score:
-                        <span id="currentScoreDisplay">0</span>
-                    </h3>
-                    <input
-                        type="text"
-                        id="playerName"
-                        placeholder="Your name"
-                        maxlength="15"
-                    />
-                    <input
-                        type="password"
-                        id="playerPassword"
-                        placeholder="Your password"
-                        maxlength="20"
-                    />
+                <!-- Leaderboard Popup -->
+                <div id="leaderboardBox" class="shopBox default-theme">
                     <button
-                        onclick="submitScore()"
-                        class="gameButton default-theme"
-                        id="submitScore"
+                        onclick="toggleLeaderboard()"
+                        id="closeLeaderboardBtn"
                     >
-                        Submit
+                        ❌
                     </button>
+
+                    <h2>Top Players</h2>
+                    <div id="leaderboardList"></div>
+
+                    <!-- Submit Score Form (only shows if not submitted) -->
+                    <div
+                        id="submitScoreForm"
+                        class="shopBox default-theme"
+                        style="display: none"
+                    >
+                        <h3>
+                            Submit Your Score:
+                            <span id="currentScoreDisplay">0</span>
+                        </h3>
+                        <input
+                            type="text"
+                            id="playerName"
+                            placeholder="Your name"
+                            maxlength="15"
+                        />
+                        <input
+                            type="password"
+                            id="playerPassword"
+                            placeholder="Your password"
+                            maxlength="20"
+                        />
+                        <button
+                            onclick="submitScore()"
+                            class="gameButton default-theme"
+                            id="submitScore"
+                        >
+                            Submit
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div id="audio-controls">
-            <button class="gameButton default-theme" id="toggle-music">
-                🔊 Music
-            </button>
-            <button class="gameButton default-theme" id="toggle-sound">
-                🔊 Sound
-            </button>
-            <button
-                id="btnCredits"
-                class="gameButton default-theme"
-                onclick="showCredits()"
-            >
-                Credits
-            </button>
-        </div>
-        <div id="grass">
-            <img src="grass.png" class="grass-tile-left" />
-            <img src="grass.png" class="grass-tile-right flipped" />
-        </div>
-
-        <p id="msg"></p>
-
-        <div id="shopBox" class="shopBox default-theme">
-            <button onclick="toggleShop()" id="closeShopBtn">❌</button>
-            <h3 id="shopText">Shop</h3>
-
-            <h3>Cat 🐱</h3>
-            <div class="shopItem">
-                <img src="cat.png" alt="Cat" />
-                <div class="shopDetails">
-                    <p id="shopCatText"></p>
-                    <button
-                        id="btnBuyPet"
-                        class="gameButton default-theme"
-                        onclick="buyPet()"
-                    ></button>
-                </div>
-            </div>
-
-            <h3>Sheep 🐑</h3>
-            <div class="shopItem">
-                <img src="sheep.png" alt="Sheep" class="shopPetImg" />
-                <div class="shopDetails">
-                    <p id="shopSheepText"></p>
-                    <button
-                        id="btnBuySheep"
-                        class="gameButton default-theme"
-                        onclick="buySheep()"
-                    ></button>
-                </div>
-            </div>
-
-            <h3>Themes 🎨</h3>
-            <div class="shopItem">
-                <button
-                    class="gameButton themebtn default-theme"
-                    onclick="applyTheme('default')"
-                >
-                    Default Theme
+            <div id="audio-controls">
+                <button class="gameButton default-theme" id="toggle-music">
+                    🔊 Music
+                </button>
+                <button class="gameButton default-theme" id="toggle-sound">
+                    🔊 Sound
                 </button>
                 <button
-                    class="gameButton themebtn default-theme"
-                    id="btnPinkTheme"
-                    onclick="applyTheme('pink')"
-                    disabled
+                    id="btnCredits"
+                    class="gameButton default-theme"
+                    onclick="showCredits()"
                 >
-                    Pink Theme (Unlock pet)
-                </button>
-                <button
-                    class="gameButton themebtn default-theme"
-                    id="btnRedTheme"
-                    onclick="buyRedTheme()"
-                >
-                    Buy Red Theme: 250
-                </button>
-                <button
-                    class="gameButton themebtn default-theme"
-                    id="btnGreenTheme"
-                    onclick="buyGreenTheme()"
-                >
-                    Buy Green Theme: 300
+                    Credits
                 </button>
             </div>
-            <button id="btnReset" class="gameButton" onclick="resetGame()">
-                Reset Game
-            </button>
-        </div>
+            <div id="grass">
+                <img src="grass.png" class="grass-tile-left" />
+                <img src="grass.png" class="grass-tile-right flipped" />
+            </div>
 
-        <div id="floatContainer"></div>
-        <div id="petBox" class="shopBox default-theme">
-            <button
-                onclick="petBox()"
-                id="closePetBtn"
-                class="gameButton default-theme"
-            >
-                ❌
-            </button>
-            <h3>Pets</h3>
+            <p id="msg"></p>
 
-            <div class="pet-section">
-                <h4>Cat 🐱</h4>
+            <div id="shopBox" class="shopBox default-theme">
+                <button onclick="toggleShop()" id="closeShopBtn">❌</button>
+                <h3 id="shopText">Shop</h3>
+
+                <h3>Cat 🐱</h3>
                 <div class="shopItem">
                     <img src="cat.png" alt="Cat" />
                     <div class="shopDetails">
-                        <p id="catStats"></p>
+                        <p id="shopCatText"></p>
+                        <button
+                            id="btnBuyPet"
+                            class="gameButton default-theme"
+                            onclick="buyPet()"
+                        ></button>
                     </div>
                 </div>
-            </div>
 
-            <div class="pet-section">
-                <h4>Sheep 🐑</h4>
+                <h3>Sheep 🐑</h3>
                 <div class="shopItem">
-                    <img src="sheep.png" alt="Sheep" />
+                    <img src="sheep.png" alt="Sheep" class="shopPetImg" />
                     <div class="shopDetails">
-                        <p id="sheepStats"></p>
+                        <p id="shopSheepText"></p>
+                        <button
+                            id="btnBuySheep"
+                            class="gameButton default-theme"
+                            onclick="buySheep()"
+                        ></button>
+                    </div>
+                </div>
+
+                <h3>Themes 🎨</h3>
+                <div class="shopItem">
+                    <button
+                        class="gameButton themebtn default-theme"
+                        onclick="applyTheme('default')"
+                    >
+                        Default Theme
+                    </button>
+                    <button
+                        class="gameButton themebtn default-theme"
+                        id="btnPinkTheme"
+                        onclick="applyTheme('pink')"
+                        disabled
+                    >
+                        Pink Theme (Unlock pet)
+                    </button>
+                    <button
+                        class="gameButton themebtn default-theme"
+                        id="btnRedTheme"
+                        onclick="buyRedTheme()"
+                    >
+                        Buy Red Theme: 250
+                    </button>
+                    <button
+                        class="gameButton themebtn default-theme"
+                        id="btnGreenTheme"
+                        onclick="buyGreenTheme()"
+                    >
+                        Buy Green Theme: 300
+                    </button>
+                </div>
+                <button id="btnReset" class="gameButton" onclick="resetGame()">
+                    Log Out
+                </button>
+            </div>
+
+            <div id="floatContainer"></div>
+            <div id="petBox" class="shopBox default-theme">
+                <button
+                    onclick="petBox()"
+                    id="closePetBtn"
+                    class="gameButton default-theme"
+                >
+                    ❌
+                </button>
+                <h3>Pets</h3>
+
+                <div class="pet-section">
+                    <h4>Cat 🐱</h4>
+                    <div class="shopItem">
+                        <img src="cat.png" alt="Cat" />
+                        <div class="shopDetails">
+                            <p id="catStats"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pet-section">
+                    <h4>Sheep 🐑</h4>
+                    <div class="shopItem">
+                        <img src="sheep.png" alt="Sheep" />
+                        <div class="shopDetails">
+                            <p id="sheepStats"></p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <img id="sheepPet" src="sheep.png" class="pet" />
+            <img id="sheepPet" src="sheep.png" class="pet" />
 
-        <!-- Your existing buttons... -->
-        <div id="creditsBox" class="shopBox default-theme">
-            <button
-                onclick="hideCredits()"
-                id="closeCreditsBtn"
-                class="gameButton default-theme"
-            >
-                ❌
-            </button>
-            <h2>Credits</h2>
+            <!-- Your existing buttons... -->
+            <div id="creditsBox" class="shopBox default-theme">
+                <button
+                    onclick="hideCredits()"
+                    id="closeCreditsBtn"
+                    class="gameButton default-theme"
+                >
+                    ❌
+                </button>
+                <h2>Credits</h2>
 
-            <div class="credits-content">
-                <h3>Game developer</h3>
-                <p>Khan Talha Aurangzeb</p>
-                <h3>Game designer</h3>
-                <p>Khan Talha Aurangzeb</p>
-                <h3>Coded By</h3>
-                <p>Khan Talha Aurangzeb</p>
-                <h3>Music & SFX used</h3>
-                <p>Sweden - C418</p>
-                <p>Meow sound - Minecraft</p>
-                <p>Other sounds - Youtube</p>
-                <h3>Game Tested By</h3>
-                <p>Khan Asad Aurangzeb</p>
-                <p>Khan Aliya Aurangzeb</p>
-                <p>Khan Talha Aurangzeb</p>
-                <h3>Ideas by</h3>
-                <p>Khan Talha Aurangzeb</p>
-                <p>Khan Aliya Aurangzeb</p>
-                <h3>Special Thanks</h3>
-                <p>Chat-GPT</p>
-                <p>Deepseek</p>
-                <p>CODEWITHHARRY</p>
-                <p>You</p>
-                <h3>Developer's note:</h3>
-                <p>
-                    I want to thank every single person who has played this
-                    game.I am very grateful for your support.I will try to bring
-                    better games in future.Thanks again for being here.
-                </p>
-                <p>Farewell</p>
+                <div class="credits-content">
+                    <h3>Game developer</h3>
+                    <p>Khan Talha Aurangzeb</p>
+                    <h3>Game designer</h3>
+                    <p>Khan Talha Aurangzeb</p>
+                    <h3>Coded By</h3>
+                    <p>Khan Talha Aurangzeb</p>
+                    <h3>Music & SFX used</h3>
+                    <p>Sweden - C418</p>
+                    <p>Meow sound - Minecraft</p>
+                    <p>Other sounds - Youtube</p>
+                    <h3>Game Tested By</h3>
+                    <p>Khan Asad Aurangzeb</p>
+                    <p>Khan Aliya Aurangzeb</p>
+                    <p>Khan Talha Aurangzeb</p>
+                    <h3>Ideas by</h3>
+                    <p>Khan Aliya Aurangzeb</p>
+                    <p>Khan Talha Aurangzeb</p>
+                    <h3>Special Thanks</h3>
+                    <p>Chat-GPT</p>
+                    <p>Deepseek</p>
+                    <p>CODEWITHHARRY</p>
+                    <p>You</p>
+                    <h3>Developer's note:</h3>
+                    <p>
+                        I want to thank every single person who has played this
+                        game.I am very grateful for your support.I will try to
+                        bring better games in future.Thanks again for being
+                        here.
+                    </p>
+                    <p>Farewell</p>
+                </div>
             </div>
         </div>
-
         <script src="script.js"></script>
         <script>
-window.addEventListener("DOMContentLoaded", () => {
-    const saved = JSON.parse(localStorage.getItem("playerData"));
-    if (saved) {
-        document.getElementById("playerName").value = saved.name;
-        document.getElementById("playerPassword").value = saved.password;
-        document.getElementById("playerName").disabled = true;
-        document.getElementById("playerPassword").disabled = true;
-    }
-});
-</script>
+            window.addEventListener("DOMContentLoaded", () => {
+                const saved = JSON.parse(localStorage.getItem("playerData"));
+                if (saved) {
+                    document.getElementById("playerName").value = saved.name;
+                    document.getElementById("playerPassword").value =
+                        saved.password;
+                }
+            });
+
+            const themes = [
+                "default-theme",
+                "pink-theme",
+                "red-theme",
+                "green-theme"
+            ];
+            const randomTheme =
+                themes[Math.floor(Math.random() * themes.length)];
+            document.getElementById("loginScreen").classList.add(randomTheme);
+        </script>
     </body>
 </html>
