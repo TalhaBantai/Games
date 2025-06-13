@@ -557,11 +557,28 @@ function loadGame() {
         .once("value")
         .then(snapshot => {
             const data = snapshot.val();
-            if (data && data.password === playerPassword && data.data) {
-                const gameState = data.data;
-                applyGameState(gameState);
+            if (data && data.password === playerPassword) {
+                if (data.data) {
+                    // ✅ Cloud save found and valid
+                    applyGameState(data.data);
+                } else {
+                    // ⚠️ No cloud save, try local
+                    console.warn(
+                        "No cloud save found, checking localStorage..."
+                    );
+                    const localData = JSON.parse(
+                        localStorage.getItem("playerData")
+                    );
+                    if (localData) {
+                        applyGameState(localData);
+                    } else {
+                        console.warn("No local save found either.");
+                    }
+                }
             } else {
-                console.warn("No valid cloud save, checking localStorage...");
+                console.warn(
+                    "Invalid password or no user data. Checking localStorage..."
+                );
                 const localData = JSON.parse(
                     localStorage.getItem("playerData")
                 );
@@ -577,6 +594,10 @@ function loadGame() {
             const localData = JSON.parse(localStorage.getItem("playerData"));
             if (localData) {
                 applyGameState(localData);
+                database.ref("users/" + safeName).set({
+    password: playerPassword,
+    data: localData
+});
             }
         });
 }
