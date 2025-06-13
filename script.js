@@ -527,13 +527,16 @@ function saveGame() {
         sheepOwned,
         sheepTime,
         sheepSpeedCost,
-        version: 2
+        version: 2 // helpful for future updates/migrations
     };
 
-    // ☁️ Save game to cloud
-    database.ref("users/" + safeName + "/data").set(gameState);
+    // ☁️ Save game to cloud (Firebase)
+    database.ref("users/" + safeName).set({
+        password: playerPassword,
+        data: gameState
+    });
 
-    // 🏆 Check and update leaderboard only if current score is higher
+    // 🏆 Update leaderboard if new score is better
     const leaderboardRef = database.ref("leaderboard/" + safeName);
     leaderboardRef.once("value").then(snapshot => {
         const existing = snapshot.val();
@@ -545,6 +548,9 @@ function saveGame() {
             });
         }
     });
+
+    // 💾 Save locally under per-user key
+    localStorage.setItem("playerData_" + safeName, JSON.stringify(gameState));
 }
 // Load game state
 function loadGame() {
@@ -557,47 +563,106 @@ function loadGame() {
         .once("value")
         .then(snapshot => {
             const data = snapshot.val();
+
             if (data && data.password === playerPassword) {
                 if (data.data) {
-                    // ✅ Cloud save found and valid
+                    // ✅ Cloud save found
                     applyGameState(data.data);
                 } else {
-                    // ⚠️ No cloud save, try local
+                    // ⚠️ No cloud save, try localStorage fallback
                     console.warn(
                         "No cloud save found, checking localStorage..."
                     );
-                    const localData = JSON.parse(
-                        localStorage.getItem("playerData")
+
+                    let localData = JSON.parse(
+                        localStorage.getItem("playerData_" + safeName)
                     );
+
+                    // Fallback to old generic save if per-user doesn't exist
+                    if (!localData) {
+                        localData = JSON.parse(
+                            localStorage.getItem("playerData")
+                        );
+                        if (localData) {
+                            // Upgrade old save to new format
+                            localStorage.setItem(
+                                "playerData_" + safeName,
+                                JSON.stringify(localData)
+                            );
+                            localStorage.removeItem("playerData");
+                        }
+                    }
+
                     if (localData) {
                         applyGameState(localData);
+                        // Optional: sync to cloud on first load
+                        database.ref("users/" + safeName).set({
+                            password: playerPassword,
+                            data: localData
+                        });
                     } else {
                         console.warn("No local save found either.");
                     }
                 }
             } else {
+                // ⚠️ Invalid password or new user, try local fallback
                 console.warn(
-                    "Invalid password or no user data. Checking localStorage..."
+                    "Invalid password or no cloud data. Checking localStorage..."
                 );
-                const localData = JSON.parse(
-                    localStorage.getItem("playerData")
+
+                let localData = JSON.parse(
+                    localStorage.getItem("playerData_" + safeName)
                 );
+
+                if (!localData) {
+                    localData = JSON.parse(localStorage.getItem("playerData"));
+                    if (localData) {
+                        localStorage.setItem(
+                            "playerData_" + safeName,
+                            JSON.stringify(localData)
+                        );
+                        localStorage.removeItem("playerData");
+                    }
+                }
+
                 if (localData) {
                     applyGameState(localData);
+                    database.ref("users/" + safeName).set({
+                        password: playerPassword,
+                        data: localData
+                    });
                 } else {
                     console.warn("No local save found either.");
                 }
             }
         })
         .catch(err => {
+            // 🌐 Cloud failed, fallback to localStorage
             console.error("Cloud load failed, using local:", err);
-            const localData = JSON.parse(localStorage.getItem("playerData"));
+
+            let localData = JSON.parse(
+                localStorage.getItem("playerData_" + safeName)
+            );
+
+            if (!localData) {
+                localData = JSON.parse(localStorage.getItem("playerData"));
+                if (localData) {
+                    localStorage.setItem(
+                        "playerData_" + safeName,
+                        JSON.stringify(localData)
+                    );
+                    localStorage.removeItem("playerData");
+                }
+            }
+
             if (localData) {
                 applyGameState(localData);
                 database.ref("users/" + safeName).set({
-    password: playerPassword,
-    data: localData
-});
+                    password: playerPassword,
+                    data: localData
+                });
+            } else {
+                console.warn("No local save found either.");
             }
         });
 }
