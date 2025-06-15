@@ -1,38 +1,3 @@
-// Game state variables
-let coins = 0;
-let power = 1;
-let cost = 10;
-let petOwned = false;
-let petUpgradeCost = 1000;
-let petMultiplier = 2;
-let autoInterval = null;
-let redThemeOwned = false;
-let greenThemeOwned = false;
-let currentTheme = "default";
-let musicMuted = false;
-let soundMuted = false;
-let sheepOwned = false;
-let sheepMultiplier = 145;
-let sheepCost = 20000;
-let sheepAutoInterval = null;
-let sheepTime = 6000;
-let petTime = 1000;
-let sheepLevel = 0;
-let petLevel = 0;
-let petSpeedCost = 4000;
-let sheepSpeedCost = 15000;
-let playerName = "";
-let currentScoreSubmitted = false;
-
-document.getElementById("playerName").disabled = false;
-document.getElementById("playerPassword").disabled = false;
-// Max stats constants
-const MAX_POWER = 70;
-const MAX_PET_STRENGTH = 100;
-const MAX_SHEEP_STRENGTH = 550;
-const MIN_PET_TIME = 100; // 0.3 seconds
-const MIN_SHEEP_TIME = 500; // 3 seconds
-
 // Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyD2QXS1gLB2WpWEn007kidJH70xMydUPkM",
@@ -52,6 +17,9 @@ const database = firebase.database();
 const musicButton = document.getElementById("toggle-music");
 const soundButton = document.getElementById("toggle-sound");
 
+document.getElementById("playerName").disabled = false;
+document.getElementById("playerPassword").disabled = false;
+
 // Audio elements
 const sndAria = new Audio("ariaMath.mp3");
 const sndSweden = new Audio("sweden.mp3");
@@ -60,11 +28,64 @@ const sndHurt = new Audio("hurt.wav");
 const sndSlash = new Audio("slash.wav");
 const sndClick = new Audio("click.wav");
 const sndBaa = new Audio("baa.wav");
-
+const sndHowl = new Audio("howl.wav");
 sndSweden.loop = true;
+// Game state variables
+let coins = 0;
+let power = 1;
+let cost = 10;
+let petOwned = false;
+let petUpgradeCost = 1000;
+let petMultiplier = 0;
+let autoInterval = null;
+let redThemeOwned = false;
+let greenThemeOwned = false;
+let currentTheme = "default";
+let musicMuted = false;
+let soundMuted = false;
+let sheepOwned = false;
+let sheepMultiplier = 145;
+let sheepCost = 20000;
+let sheepAutoInterval = null;
+let sheepTime = 6000;
+let petTime = 1000;
+let petSpeedCost = 4000;
+let sheepSpeedCost = 15000;
+let playerName = "";
+let currentScoreSubmitted = false;
 
-function buySheep() {
-    if (sheepMultiplier >= MAX_SHEEP_STRENGTH) {
+// Max stats constants
+const MAX_POWER = 70;
+const MAX_PET_STRENGTH = 120;
+const MAX_SHEEP_STRENGTH = 600;
+const MIN_PET_TIME = 100;
+const MIN_SHEEP_TIME = 500;
+const MAX_WOLF_STRENGTH = 2000;
+const MAX_WOLF_SPEED = 1000;
+
+let petSpeedLevel = Math.floor((1000 - petTime) / 100);
+let sheepSpeedLevel = Math.floor((6000 - sheepTime) / 1000);
+let sheepLevel = Math.floor((sheepMultiplier - 145) / 5);
+let petLevel = Math.floor(petMultiplier / 2);
+
+// Add these variables at the top with other pet variables
+let wolfLevel = 0;
+let wolfMultiplier = 990;
+let wolfAutoInterval = null;
+let wolfTime = 10000;
+let wolfSpeedCost = 100000;
+let wolfCost = 150000;
+let wolfSpeedLevel = 0;
+let wolfOwned = false;
+let rebirthCount = 0;
+let rebirthCost = 10000000;
+let rebirthMultiplier = 1;
+let priceMultiplier = 1;
+
+// Add to saveGame() function
+
+function buyWolf() {
+    if (wolfLevel >= 100) {
         spawnFloatText(
             window.innerWidth / 2,
             window.innerHeight / 2,
@@ -73,38 +94,59 @@ function buySheep() {
         return;
     }
 
-    if (coins >= sheepCost) {
-        coins -= sheepCost;
-        sheepCost = Math.floor(sheepCost * 1.2);
-        sheepOwned = true;
-        sheepMultiplier = Math.min(MAX_SHEEP_STRENGTH, sheepMultiplier + 10);
+    document.getElementById("wolfPetSleeping").style.display = "block";
+
+    const nextCost = calculateUpgradeCost(
+        150000,
+        200000000,
+        wolfLevel + 1,
+        100
+    );
+
+    if (coins >= nextCost) {
+        coins -= nextCost;
+        wolfLevel++;
+        wolfMultiplier = Math.min(MAX_WOLF_STRENGTH, 1000 + wolfLevel * 10);
+        wolfOwned = true;
+        // Update cost for next level
+        wolfCost =
+            wolfLevel < 100
+                ? Math.floor(
+                      calculateUpgradeCost(
+                          150000,
+                          200000000,
+                          wolfLevel + 1,
+                          100
+                      )
+                  )
+                : "Max Strength";
+
         saveGame();
         updShop();
+
         spawnFloatText(
             window.innerWidth / 2,
             window.innerHeight / 2,
-            "Upgrade Successful"
+            "Wolf upgraded!"
         );
-        if (!soundMuted) sndBaa.play();
+        if (!soundMuted) sndHowl.play(); // Add this sound
 
-        document.getElementById("btnBuySheep").innerText =
-            sheepMultiplier >= MAX_SHEEP_STRENGTH
-                ? "Max Strength"
-                : `Strength: ${sheepCost} coins`;
-
-        const sheepImg = document.getElementById("sheepPet");
-        sheepImg.style.display = "block";
-
-        if (!sheepAutoInterval) {
-            sheepAutoInterval = setInterval(() => {
-                coins += power * sheepMultiplier;
+        // Start auto-generation if not already running
+        if (!wolfAutoInterval) {
+            wolfAutoInterval = setInterval(() => {
+                coins += power * wolfMultiplier * rebirthMultiplier;
+                console.log("Wolf collected coins");
                 updateStats();
                 const sword = document.getElementById("btnClick");
                 const rect = sword.getBoundingClientRect();
                 const x = rect.left + rect.width / 2;
                 const y = rect.top + rect.height / 2;
-                spawnFloatText(x, y, `+${power * sheepMultiplier}`);
-            }, sheepTime);
+                spawnFloatText(
+                    x,
+                    y,
+                    `+${power * wolfMultiplier * rebirthMultiplier}`
+                );
+            }, wolfTime);
         }
 
         updateStats();
@@ -114,6 +156,75 @@ function buySheep() {
             window.innerWidth / 2,
             window.innerHeight / 2,
             "❌ Not enough coins"
+        );
+    }
+}
+
+function upgradeWolfSpeed() {
+    if (wolfSpeedLevel >= 9) {
+        spawnFloatText(
+            window.innerWidth / 2,
+            window.innerHeight / 2,
+            "Max speed reached!"
+        );
+        return;
+    }
+
+    const nextCost = calculateUpgradeCost(
+        100000,
+        10000000,
+        wolfSpeedLevel + 1,
+        9
+    );
+
+    if (coins >= nextCost && wolfLevel > 0) {
+        coins -= nextCost;
+        wolfSpeedLevel++;
+        wolfTime = Math.max(MAX_WOLF_SPEED, wolfTime - 1000);
+
+        // Update cost for next level
+        wolfSpeedCost =
+            wolfSpeedLevel < 9
+                ? Math.floor(
+                      calculateUpgradeCost(
+                          100000,
+                          10000000,
+                          wolfSpeedLevel + 1,
+                          9
+                      )
+                  )
+                : "Max Speed";
+
+        // Restart interval with new speed
+        clearInterval(wolfAutoInterval);
+        wolfAutoInterval = setInterval(() => {
+            coins += power * wolfMultiplier * rebirthMultiplier;
+            updateStats();
+            const sword = document.getElementById("btnClick");
+            const rect = sword.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            spawnFloatText(
+                x,
+                y,
+                `+${power * wolfMultiplier * rebirthMultiplier}`
+            );
+        }, wolfTime);
+
+        saveGame();
+        updShop();
+        spawnFloatText(
+            window.innerWidth / 2,
+            window.innerHeight / 2,
+            "Wolf Speed Upgraded!"
+        );
+        if (!soundMuted) sndHowl.play();
+    } else {
+        if (!soundMuted) sndHurt.play();
+        spawnFloatText(
+            window.innerWidth / 2,
+            window.innerHeight / 2,
+            "❌ Can't upgrade"
         );
     }
 }
@@ -128,10 +239,16 @@ function buyPet() {
         return;
     }
 
-    if (coins >= petUpgradeCost) {
-        coins -= petUpgradeCost;
-        petUpgradeCost = Math.floor(petUpgradeCost * 1.2);
+    petLevel = Math.floor(petMultiplier / 2);
+    const nextCost = calculateUpgradeCost(1000, 1000000000, petLevel + 1, 89);
+
+    if (coins >= nextCost) {
+        coins -= nextCost;
+        petUpgradeCost = Math.floor(
+            calculateUpgradeCost(1000, 1000000000, petLevel + 2, 90)
+        );
         petOwned = true;
+        petLevel++;
         petMultiplier = Math.min(MAX_PET_STRENGTH, petMultiplier + 2);
         saveGame();
         updShop();
@@ -154,13 +271,17 @@ function buyPet() {
 
         if (!autoInterval) {
             autoInterval = setInterval(() => {
-                coins += power * petMultiplier;
+                coins += power * petMultiplier * rebirthMultiplier;
                 updateStats();
                 const sword = document.getElementById("btnClick");
                 const rect = sword.getBoundingClientRect();
                 const x = rect.left + rect.width / 2;
                 const y = rect.top + rect.height / 2;
-                spawnFloatText(x, y, `+${power * petMultiplier}`);
+                spawnFloatText(
+                    x,
+                    y,
+                    `+${power * petMultiplier * rebirthMultiplier}`
+                );
             }, petTime);
         }
 
@@ -171,6 +292,613 @@ function buyPet() {
             window.innerWidth / 2,
             window.innerHeight / 2,
             "❌ Not enough coins"
+        );
+    }
+}
+
+function upgradePetSpeed() {
+    if (petTime <= MIN_PET_TIME) {
+        spawnFloatText(
+            window.innerWidth / 2,
+            window.innerHeight / 2,
+            "Max speed reached!"
+        );
+        return;
+    }
+
+    petSpeedLevel = Math.floor((1000 - petTime) / 100);
+    const nextCost = calculateUpgradeCost(4000, 5000000, petSpeedLevel + 1, 9);
+
+    if (coins >= nextCost && petOwned) {
+        coins -= nextCost;
+        petTime = Math.max(MIN_PET_TIME, petTime - 100);
+        petSpeedLevel++;
+        petSpeedCost = Math.floor(
+            calculateUpgradeCost(4000, 5000000, petSpeedLevel + 1, 9)
+        );
+
+        clearInterval(autoInterval);
+        autoInterval = setInterval(() => {
+            coins += power * petMultiplier * rebirthMultiplier;
+            updateStats();
+            const sword = document.getElementById("btnClick");
+            const rect = sword.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            spawnFloatText(x, y, `+${power * petMultiplier}`);
+        }, petTime);
+
+        saveGame();
+        updShop();
+        spawnFloatText(
+            window.innerWidth / 2,
+            window.innerHeight / 2,
+            "Speed Upgraded!"
+        );
+        if (!soundMuted) sndMeow.play();
+    } else {
+        if (!soundMuted) sndHurt.play();
+        spawnFloatText(
+            window.innerWidth / 2,
+            window.innerHeight / 2,
+            "❌ Need more coins"
+        );
+    }
+}
+
+function buySheep() {
+    if (sheepMultiplier >= MAX_SHEEP_STRENGTH) {
+        spawnFloatText(
+            window.innerWidth / 2,
+            window.innerHeight / 2,
+            "Max strength reached!"
+        );
+        return;
+    }
+
+    sheepLevel = Math.floor((sheepMultiplier - 145) / 5);
+    const nextCost = calculateUpgradeCost(
+        20000,
+        1400000000,
+        sheepLevel + 1,
+        90
+    );
+
+    if (coins >= nextCost) {
+        coins -= nextCost;
+        sheepCost = Math.floor(
+            calculateUpgradeCost(20000, 1400000000, sheepLevel + 2, 90)
+        );
+        sheepOwned = true;
+        sheepLevel++;
+        sheepMultiplier = Math.min(MAX_SHEEP_STRENGTH, sheepMultiplier + 5);
+        saveGame();
+        updShop();
+
+        spawnFloatText(
+            window.innerWidth / 2,
+            window.innerHeight / 2,
+            "Upgrade Successful"
+        );
+        if (!soundMuted) sndBaa.play();
+
+        document.getElementById("btnBuySheep").innerText =
+            sheepMultiplier >= MAX_SHEEP_STRENGTH
+                ? "Max Strength"
+                : `Strength: ${sheepCost} coins`;
+
+        const sheepImg = document.getElementById("sheepPet");
+        sheepImg.style.display = "block";
+
+        if (!sheepAutoInterval) {
+            sheepAutoInterval = setInterval(() => {
+                coins += power * sheepMultiplier * rebirthMultiplier;
+                updateStats();
+                const sword = document.getElementById("btnClick");
+                const rect = sword.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+                spawnFloatText(
+                    x,
+                    y,
+                    `+${power * sheepMultiplier * rebirthMultiplier}`
+                );
+            }, sheepTime);
+        }
+
+        updateStats();
+    } else {
+        if (!soundMuted) sndHurt.play();
+        spawnFloatText(
+            window.innerWidth / 2,
+            window.innerHeight / 2,
+            "❌ Not enough coins"
+        );
+    }
+}
+
+function upgradeSheepSpeed() {
+    if (sheepTime <= MIN_SHEEP_TIME) {
+        spawnFloatText(
+            window.innerWidth / 2,
+            window.innerHeight / 2,
+            "Max speed reached!"
+        );
+        return;
+    }
+
+    sheepSpeedLevel = Math.floor((6000 - sheepTime) / 1000);
+    const nextCost = calculateUpgradeCost(
+        15000,
+        5000000,
+        sheepSpeedLevel + 1,
+        6
+    );
+
+    if (coins >= nextCost && sheepOwned) {
+        coins -= nextCost;
+        sheepTime = Math.max(MIN_SHEEP_TIME, sheepTime - 1000);
+        sheepSpeedLevel++;
+        sheepSpeedCost = Math.floor(
+            calculateUpgradeCost(15000, 5000000, sheepSpeedLevel + 1, 6)
+        );
+
+        clearInterval(sheepAutoInterval);
+        sheepAutoInterval = setInterval(() => {
+            coins += power * sheepMultiplier * rebirthMultiplier;
+            updateStats();
+            const sword = document.getElementById("btnClick");
+            const rect = sword.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+            spawnFloatText(
+                x,
+                y,
+                `+${power * sheepMultiplier * rebirthMultiplier}`
+            );
+        }, sheepTime);
+
+        saveGame();
+        updShop();
+        spawnFloatText(
+            window.innerWidth / 2,
+            window.innerHeight / 2,
+            "Speed Upgraded!"
+        );
+        if (!soundMuted) sndBaa.play();
+    } else {
+        if (!soundMuted) sndHurt.play();
+        spawnFloatText(
+            window.innerWidth / 2,
+            window.innerHeight / 2,
+            "❌ Can't upgrade"
+        );
+    }
+}
+
+function calculateUpgradeCost(basePrice, finalPrice, level, maxLevel) {
+    const exponent = (level - 1) / (maxLevel - 1);
+    return Math.floor(
+        basePrice * Math.pow(finalPrice / basePrice, exponent) * priceMultiplier
+    );
+}
+
+function clickIt(event) {
+    coins += power * rebirthMultiplier;
+    saveGame();
+    if (!musicMuted) sndSweden.play();
+    spawnFloatText(
+        event.clientX,
+        event.clientY,
+        `+${power * rebirthMultiplier}`
+    );
+    updateStats();
+}
+
+function upgrade(event) {
+    if (power >= MAX_POWER) {
+        spawnFloatText(event.clientX, event.clientY, "Max power reached!");
+        return;
+    }
+
+    if (coins >= cost) {
+        coins -= cost;
+
+        if (!soundMuted) sndClick.play();
+        cost = Math.floor(calculateUpgradeCost(10, 1000000000, power + 1, 69));
+        power = Math.min(MAX_POWER, power + 1);
+        saveGame();
+        spawnFloatText(event.clientX, event.clientY, "Upgraded!");
+    } else {
+        if (!soundMuted) sndHurt.play();
+        spawnFloatText(event.clientX, event.clientY, "❌ Not enough coins");
+    }
+    updateStats();
+}
+
+// Save game state
+function saveGame() {
+    if (!playerName || !playerPassword) return;
+
+    const safeName = playerName.replace(/[^a-zA-Z0-9_-]/g, "_");
+
+    const gameState = {
+        coins,
+        power,
+        cost,
+        petOwned,
+        petUpgradeCost,
+        petMultiplier,
+        petTime,
+        petSpeedCost,
+        redThemeOwned,
+        greenThemeOwned,
+        currentTheme,
+        sheepCost,
+        sheepMultiplier,
+        sheepOwned,
+        sheepTime,
+        sheepSpeedCost,
+        wolfOwned,
+        wolfLevel,
+        wolfMultiplier,
+        wolfTime,
+        wolfSpeedCost,
+        wolfCost,
+        wolfSpeedLevel,
+        rebirthCount,
+        rebirthCost,
+        rebirthMultiplier,
+        priceMultiplier,
+        version: 2
+    };
+
+    // ☁️ Save game to cloud (Firebase)
+    database.ref("users/" + safeName).set({
+        password: playerPassword,
+        data: gameState
+    });
+
+    // 🏆 Update leaderboard if new score is better
+    // 🏆 Update leaderboard if new score is better OR rebirth count changed
+    // 🏆 Update leaderboard (replace this part in saveGame())
+    const leaderboardRef = database.ref("leaderboard/" + safeName);
+    leaderboardRef.once("value").then(snapshot => {
+        const existing = snapshot.val();
+
+        // Prepare updated data object
+        const updatedData = {};
+
+        // Only update score if it's higher
+        if (!existing || coins > (existing.score || 0)) {
+            updatedData.score = coins;
+        }
+
+        // Only update rebirths if it's higher
+        if (!existing || rebirthCount > (existing.rebirths || 0)) {
+            updatedData.rebirths = rebirthCount;
+        }
+
+        if (Object.keys(updatedData).length > 0) {
+            updatedData.name = playerName;
+            updatedData.timestamp = firebase.database.ServerValue.TIMESTAMP;
+
+            leaderboardRef.update(updatedData).then(() => {
+                console.log("✅ Leaderboard updated with:", updatedData);
+            });
+        }
+    });
+    // 💾 Save locally under per-user key
+    localStorage.setItem("playerData_" + safeName, JSON.stringify(gameState));
+}
+
+// Load game state
+async function loadGame() {
+    if (!playerName || !playerPassword) return;
+
+    const safeName = playerName.replace(/[^a-zA-Z0-9_-]/g, "_");
+    const userRef = database.ref("users/" + safeName);
+
+    try {
+        // 1️⃣ FIRST TRY: Load from Firebase (Cloud)
+        const snapshot = await userRef.once("value");
+        const cloudData = snapshot.val();
+
+        if (cloudData?.password === playerPassword) {
+            if (cloudData.data) {
+                // ✅ Cloud data exists and password matches
+                console.log("✅ Loaded from cloud successfully!");
+                applyGameState(cloudData.data);
+                return; // Exit early on success
+            } else {
+                console.warn(
+                    "⚠️ No cloud save found, falling back to localStorage..."
+                );
+            }
+        } else {
+            console.warn(
+                "⚠️ Invalid password or no cloud data, falling back to localStorage..."
+            );
+        }
+
+        // 2️⃣ SECOND TRY: Fallback to localStorage
+        const localData = getLocalStorageData(safeName);
+
+        if (localData) {
+            console.log("✅ Loaded from localStorage fallback!");
+            applyGameState(localData);
+
+            // Optional: Sync localStorage data back to cloud (if credentials are correct)
+            if (cloudData?.password === playerPassword || !cloudData) {
+                await userRef.set({
+                    password: playerPassword,
+                    data: localData
+                });
+                console.log("🔄 Local data synced to cloud!");
+            }
+        } else {
+            console.warn("❌ No local or cloud save found. Starting fresh.");
+        }
+    } catch (err) {
+        console.error(
+            "🌐 Cloud load failed, falling back to localStorage:",
+            err
+        );
+
+        // 3️⃣ THIRD TRY: If Firebase fails entirely, check localStorage
+        const localData = getLocalStorageData(safeName);
+
+        if (localData) {
+            console.log("✅ Loaded from localStorage after cloud failure!");
+            applyGameState(localData);
+
+            // Try to sync to cloud if possible (but don't block on errors)
+            userRef
+                .set({
+                    password: playerPassword,
+                    data: localData
+                })
+                .catch(e => console.error("Failed to sync to cloud:", e));
+        } else {
+            console.warn("❌ No local or cloud save found. Starting fresh.");
+        }
+    }
+}
+
+// Helper function to get localStorage data (with legacy support)
+function getLocalStorageData(safeName) {
+    let localData = JSON.parse(localStorage.getItem("playerData_" + safeName));
+
+    // Fallback to old generic save if per-user doesn't exist
+    if (!localData) {
+        localData = JSON.parse(localStorage.getItem("playerData"));
+        if (localData) {
+            // Migrate to new format
+            localStorage.setItem(
+                "playerData_" + safeName,
+                JSON.stringify(localData)
+            );
+            localStorage.removeItem("playerData");
+        }
+    }
+
+    return localData;
+}
+
+function applyGameState(gameState) {
+    coins = gameState.coins || 0;
+    power = gameState.power || 1;
+    cost = gameState.cost || 10;
+    petOwned = gameState.petOwned || false;
+    petUpgradeCost = gameState.petUpgradeCost || 1000;
+    petMultiplier = gameState.petMultiplier || 0;
+    petTime = gameState.petTime || 1000;
+    petSpeedCost = gameState.petSpeedCost || 4000;
+    redThemeOwned = gameState.redThemeOwned || false;
+    greenThemeOwned = gameState.greenThemeOwned || false;
+    currentTheme = gameState.currentTheme || "default";
+    sheepCost = gameState.sheepCost || 20000;
+    sheepMultiplier = gameState.sheepMultiplier || 145;
+    sheepOwned = gameState.sheepOwned || false;
+    sheepTime = gameState.sheepTime || 6000;
+    sheepSpeedCost = gameState.sheepSpeedCost || 15000;
+    wolfOwned = gameState.wolfOwned || false;
+    wolfLevel = gameState.wolfLevel || 0;
+    wolfMultiplier = gameState.wolfMultiplier || 990;
+    wolfTime = gameState.wolfTime || 10000;
+    wolfSpeedCost = gameState.wolfSpeedCost || 100000;
+    wolfCost = gameState.wolfCost || 150000;
+    wolfSpeedLevel = gameState.wolfSpeedLevel || 0;
+    rebirthCount = gameState.rebirthCount || 0;
+    rebirthMultiplier = gameState.rebirthMultiplier || 1;
+    priceMultiplier = gameState.priceMultiplier || 1;
+    rebirthCost = gameState.rebirthCost || 10000000;
+
+    applyTheme(currentTheme);
+    updateStats();
+    updShop();
+
+    if (wolfOwned) {
+        document.getElementById("wolfPetSleeping").style.display = "block";
+
+        if (!wolfAutoInterval) {
+            wolfAutoInterval = setInterval(() => {
+                coins += power * wolfMultiplier * rebirthMultiplier;
+                updateStats();
+                const sword = document.getElementById("btnClick");
+                const rect = sword.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+                spawnFloatText(
+                    x,
+                    y,
+                    `+${power * wolfMultiplier * rebirthMultiplier}`
+                );
+            }, wolfTime);
+        }
+    }
+
+    // Apply cat state
+    if (petOwned) {
+        document.getElementById("catOnSword").style.display = "block";
+        unlockPinkTheme();
+
+        if (!autoInterval) {
+            autoInterval = setInterval(() => {
+                coins += power * petMultiplier * rebirthMultiplier;
+                updateStats();
+                const sword = document.getElementById("btnClick");
+                const rect = sword.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+                spawnFloatText(
+                    x,
+                    y,
+                    `+${power * petMultiplier * rebirthMultiplier}`
+                );
+            }, petTime);
+        }
+    }
+
+    // Apply sheep state
+    if (sheepOwned) {
+        document.getElementById("sheepPet").style.display = "block";
+
+        if (!sheepAutoInterval) {
+            sheepAutoInterval = setInterval(() => {
+                coins += power * sheepMultiplier * rebirthMultiplier;
+                updateStats();
+                const sword = document.getElementById("btnClick");
+                const rect = sword.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+                spawnFloatText(
+                    x,
+                    y,
+                    `+${power * sheepMultiplier * rebirthMultiplier}`
+                );
+            }, sheepTime);
+        }
+    }
+
+    // Apply themes
+    if (redThemeOwned) {
+        document.getElementById("btnRedTheme").innerText = "Apply Red Theme";
+    }
+
+    if (greenThemeOwned) {
+        document.getElementById("btnGreenTheme").innerText =
+            "Apply Green Theme";
+    }
+
+    if (currentTheme === "green") {
+        document.getElementById("grass").style.display = "block";
+    } else {
+        document.getElementById("grass").style.display = "none";
+    }
+
+    applyTheme(currentTheme);
+}
+
+// Reset game
+function resetGame() {
+    if (confirm("Are you sure you want to log Out?")) {
+        localStorage.removeItem("swordClickerSave");
+        localStorage.removeItem("playerInfo");
+        localStorage.removeItem("playerData");
+
+        playerName = null;
+        playerPassword = null;
+
+        document.getElementById("playerName").disabled = false;
+        document.getElementById("playerPassword").disabled = false;
+        document.getElementById("playerName").value = "";
+        document.getElementById("playerPassword").value = "";
+
+        location.reload();
+    }
+}
+
+function resetGameProgress() {
+    // Reset power and click upgrades
+    power = 1;
+    cost = Math.floor(10 * priceMultiplier);
+
+    // Reset pets
+    wolfLevel = 0;
+    wolfMultiplier = 1000;
+    wolfOwned = false;
+    wolfTime = 10000;
+    wolfSpeedLevel = 0;
+    clearInterval(wolfAutoInterval);
+    wolfAutoInterval = null;
+
+    petMultiplier = 0;
+    petOwned = false;
+    petTime = 1000;
+    petSpeedLevel = 0;
+    clearInterval(autoInterval);
+    autoInterval = null;
+
+    sheepMultiplier = 145;
+    sheepOwned = false;
+    sheepTime = 6000;
+    sheepSpeedLevel = 0;
+    clearInterval(sheepAutoInterval);
+    sheepAutoInterval = null;
+
+    // Recalculate initial costs with priceMultiplier
+    petUpgradeCost = Math.floor(1000 * priceMultiplier);
+    sheepCost = Math.floor(20000 * priceMultiplier);
+    wolfCost = Math.floor(150000 * priceMultiplier);
+    petSpeedCost = Math.floor(4000 * priceMultiplier);
+    sheepSpeedCost = Math.floor(15000 * priceMultiplier);
+    wolfSpeedCost = Math.floor(100000 * priceMultiplier);
+
+    // Reset pet displays
+    document.getElementById("wolfPetSleeping").style.display = "none";
+    document.getElementById("catOnSword").style.display = "none";
+    document.getElementById("sheepPet").style.display = "none";
+
+    // Update shop buttons (now using the recalculated costs)
+    document.getElementById("btnBuyPet").innerText = `Buy: ${petUpgradeCost}`;
+    document.getElementById("btnBuySheep").innerText = `Buy: ${sheepCost}`;
+    document.getElementById("btnBuyWolf").innerText = `Buy: ${wolfCost}`;
+}
+
+function rebirth() {
+    if (coins >= rebirthCost) {
+        coins = 0; // Reset coins
+        rebirthCount++;
+
+        // Increase multipliers
+        rebirthMultiplier += 1; // 50% more coin gains
+        priceMultiplier += 0.25; // 25% higher prices
+
+        // Calculate next rebirth cost (5x increase)
+        rebirthCost *= 5;
+
+        // Reset all game progress
+        resetGameProgress();
+
+        // Save and update
+        saveGame();
+        updateStats();
+        updShop();
+
+        spawnFloatText(
+            window.innerWidth / 2,
+            window.innerHeight / 2,
+            `Rebirth ${rebirthCount} complete! +50% gains`
+        );
+
+        if (!soundMuted) sndHowl.play(); // Or any other celebratory sound
+    } else {
+        if (!soundMuted) sndHurt.play();
+        spawnFloatText(
+            window.innerWidth / 2,
+            window.innerHeight / 2,
+            `❌ Need ${rebirthCost.toLocaleString()} coins`
         );
     }
 }
@@ -238,7 +966,44 @@ function initGame() {
 }
 
 // Update shop UI
+
 function updShop() {
+    document.getElementById("btnRebirth").innerText = `Rebirth: ${rebirthCost}`;
+
+    // --- WOLF SECTION ---
+    const wolfBtn = document.getElementById("btnBuyWolf");
+    const wolfSpeedBtn = document.getElementById("upgWolfSpeed");
+    const wolfText = document.getElementById("shopWolfText");
+
+    if (!wolfOwned) {
+        wolfBtn.innerText = `Buy: ${wolfCost}`;
+        wolfSpeedBtn.style.display = "none";
+        wolfText.innerHTML = `Buy the wolf to help collect coins.<br>More powerful than Sheep or Cat but more expensive too.`;
+    } else {
+        // Show basic stats
+        wolfText.innerHTML = `Strength: ${wolfMultiplier}<br>Speed: ${(
+            wolfTime / 1000
+        ).toFixed(1)} seconds`;
+
+        // Handle strength upgrade button
+        if (wolfMultiplier >= MAX_WOLF_STRENGTH || wolfLevel >= 100) {
+            wolfBtn.innerText = `Max Strength`;
+        } else {
+            wolfBtn.innerText = `Strength: ${wolfCost}`;
+        }
+
+        // Handle speed upgrade
+        if (wolfTime <= MAX_WOLF_SPEED) {
+            wolfSpeedBtn.innerText = `Max Speed`;
+        } else {
+            wolfSpeedBtn.innerText = `Speed: ${wolfSpeedCost}`;
+        }
+
+        wolfSpeedBtn.style.display = "block";
+    }
+
+    // ... (rest of your shop code for pets, sheep, etc.)
+
     // Power upgrade button
     if (power >= MAX_POWER) {
         document.getElementById("btnUpgrade").innerText =
@@ -333,7 +1098,7 @@ function updShop() {
 
 // Update game stats display
 function updateStats() {
-    let statsHTML = `Coins: ${coins}<br>Power: ${power}`;
+    let statsHTML = `Coins: ${Math.floor(coins)}<br>Power: ${power}`;
 
     document.getElementById("stats").innerHTML = statsHTML;
 
@@ -345,36 +1110,6 @@ function updateStats() {
             "btnUpgrade"
         ).innerText = `Upgrade (${cost} coins)`;
     }
-}
-
-// Click handler
-function clickIt(event) {
-    coins += power;
-    saveGame();
-    if (!musicMuted) sndSweden.play();
-    spawnFloatText(event.clientX, event.clientY, `+${power}`);
-    updateStats();
-}
-
-// Upgrade handler
-function upgrade(event) {
-    if (power >= MAX_POWER) {
-        spawnFloatText(event.clientX, event.clientY, "Max power reached!");
-        return;
-    }
-
-    if (coins >= cost) {
-        coins -= cost;
-        saveGame();
-        if (!soundMuted) sndSlash.play();
-        cost = Math.floor(cost * 1.3);
-        power = Math.min(MAX_POWER, power + 1);
-        spawnFloatText(event.clientX, event.clientY, "Upgraded!");
-    } else {
-        if (!soundMuted) sndHurt.play();
-        spawnFloatText(event.clientX, event.clientY, "❌ Not enough coins");
-    }
-    updateStats();
 }
 
 // Toggle shop visibility
@@ -504,262 +1239,6 @@ function buyGreenTheme() {
     }
 }
 
-// Save game state
-function saveGame() {
-    if (!playerName || !playerPassword) return;
-
-    const safeName = playerName.replace(/[^a-zA-Z0-9_-]/g, "_");
-
-    const gameState = {
-        coins,
-        power,
-        cost,
-        petOwned,
-        petUpgradeCost,
-        petMultiplier,
-        petTime,
-        petSpeedCost,
-        redThemeOwned,
-        greenThemeOwned,
-        currentTheme,
-        sheepCost,
-        sheepMultiplier,
-        sheepOwned,
-        sheepTime,
-        sheepSpeedCost,
-        version: 2 // helpful for future updates/migrations
-    };
-
-    // ☁️ Save game to cloud (Firebase)
-    database.ref("users/" + safeName).set({
-        password: playerPassword,
-        data: gameState
-    });
-
-    // 🏆 Update leaderboard if new score is better
-    const leaderboardRef = database.ref("leaderboard/" + safeName);
-    leaderboardRef.once("value").then(snapshot => {
-        const existing = snapshot.val();
-        if (!existing || coins > existing.score) {
-            leaderboardRef.set({
-                name: playerName,
-                score: coins,
-                timestamp: Date.now()
-            });
-        }
-    });
-
-    // 💾 Save locally under per-user key
-    localStorage.setItem("playerData_" + safeName, JSON.stringify(gameState));
-}
-// Load game state
-function loadGame() {
-    if (!playerName || !playerPassword) return;
-
-    const safeName = playerName.replace(/[^a-zA-Z0-9_-]/g, "_");
-    const userRef = database.ref("users/" + safeName);
-
-    userRef
-        .once("value")
-        .then(snapshot => {
-            const data = snapshot.val();
-
-            if (data && data.password === playerPassword) {
-                if (data.data) {
-                    // ✅ Cloud save found
-                    applyGameState(data.data);
-                } else {
-                    // ⚠️ No cloud save, try localStorage fallback
-                    console.warn(
-                        "No cloud save found, checking localStorage..."
-                    );
-
-                    let localData = JSON.parse(
-                        localStorage.getItem("playerData_" + safeName)
-                    );
-
-                    // Fallback to old generic save if per-user doesn't exist
-                    if (!localData) {
-                        localData = JSON.parse(
-                            localStorage.getItem("playerData")
-                        );
-                        if (localData) {
-                            // Upgrade old save to new format
-                            localStorage.setItem(
-                                "playerData_" + safeName,
-                                JSON.stringify(localData)
-                            );
-                            localStorage.removeItem("playerData");
-                        }
-                    }
-
-                    if (localData) {
-                        applyGameState(localData);
-                        // Optional: sync to cloud on first load
-                        database.ref("users/" + safeName).set({
-                            password: playerPassword,
-                            data: localData
-                        });
-                    } else {
-                        console.warn("No local save found either.");
-                    }
-                }
-            } else {
-                // ⚠️ Invalid password or new user, try local fallback
-                console.warn(
-                    "Invalid password or no cloud data. Checking localStorage..."
-                );
-
-                let localData = JSON.parse(
-                    localStorage.getItem("playerData_" + safeName)
-                );
-
-                if (!localData) {
-                    localData = JSON.parse(localStorage.getItem("playerData"));
-                    if (localData) {
-                        localStorage.setItem(
-                            "playerData_" + safeName,
-                            JSON.stringify(localData)
-                        );
-                        localStorage.removeItem("playerData");
-                    }
-                }
-
-                if (localData) {
-                    applyGameState(localData);
-                    database.ref("users/" + safeName).set({
-                        password: playerPassword,
-                        data: localData
-                    });
-                } else {
-                    console.warn("No local save found either.");
-                }
-            }
-        })
-        .catch(err => {
-            // 🌐 Cloud failed, fallback to localStorage
-            console.error("Cloud load failed, using local:", err);
-
-            let localData = JSON.parse(
-                localStorage.getItem("playerData_" + safeName)
-            );
-
-            if (!localData) {
-                localData = JSON.parse(localStorage.getItem("playerData"));
-                if (localData) {
-                    localStorage.setItem(
-                        "playerData_" + safeName,
-                        JSON.stringify(localData)
-                    );
-                    localStorage.removeItem("playerData");
-                }
-            }
-
-            if (localData) {
-                applyGameState(localData);
-                database.ref("users/" + safeName).set({
-                    password: playerPassword,
-                    data: localData
-                });
-            } else {
-                console.warn("No local save found either.");
-            }
-        });
-}
-
-function applyGameState(gameState) {
-    coins = gameState.coins || 0;
-    power = gameState.power || 1;
-    cost = gameState.cost || 10;
-    petOwned = gameState.petOwned || false;
-    petUpgradeCost = gameState.petUpgradeCost || 1000;
-    petMultiplier = gameState.petMultiplier || 2;
-    petTime = gameState.petTime || 1000;
-    petSpeedCost = gameState.petSpeedCost || 4000;
-    redThemeOwned = gameState.redThemeOwned || false;
-    greenThemeOwned = gameState.greenThemeOwned || false;
-    currentTheme = gameState.currentTheme || "default";
-    sheepCost = gameState.sheepCost || 20000;
-    sheepMultiplier = gameState.sheepMultiplier || 145;
-    sheepOwned = gameState.sheepOwned || false;
-    sheepTime = gameState.sheepTime || 6000;
-    sheepSpeedCost = gameState.sheepSpeedCost || 15000;
-
-    applyTheme(currentTheme);
-    updateStats();
-    updShop();
-    // Apply cat state
-    if (petOwned) {
-        document.getElementById("catOnSword").style.display = "block";
-        unlockPinkTheme();
-
-        if (!autoInterval) {
-            autoInterval = setInterval(() => {
-                coins += power * petMultiplier;
-                updateStats();
-                const sword = document.getElementById("btnClick");
-                const rect = sword.getBoundingClientRect();
-                const x = rect.left + rect.width / 2;
-                const y = rect.top + rect.height / 2;
-                spawnFloatText(x, y, `+${power * petMultiplier}`);
-            }, petTime);
-        }
-    }
-
-    // Apply sheep state
-    if (sheepOwned) {
-        document.getElementById("sheepPet").style.display = "block";
-
-        if (!sheepAutoInterval) {
-            sheepAutoInterval = setInterval(() => {
-                coins += power * sheepMultiplier;
-                updateStats();
-                const sword = document.getElementById("btnClick");
-                const rect = sword.getBoundingClientRect();
-                const x = rect.left + rect.width / 2;
-                const y = rect.top + rect.height / 2;
-                spawnFloatText(x, y, `+${power * sheepMultiplier}`);
-            }, sheepTime);
-        }
-    }
-
-    // Apply themes
-    if (redThemeOwned) {
-        document.getElementById("btnRedTheme").innerText = "Apply Red Theme";
-    }
-
-    if (greenThemeOwned) {
-        document.getElementById("btnGreenTheme").innerText =
-            "Apply Green Theme";
-    }
-
-    if (currentTheme === "green") {
-        document.getElementById("grass").style.display = "block";
-    } else {
-        document.getElementById("grass").style.display = "none";
-    }
-
-    applyTheme(currentTheme);
-}
-// Reset game
-function resetGame() {
-    if (confirm("Are you sure you want to log Out?")) {
-        localStorage.removeItem("swordClickerSave");
-        localStorage.removeItem("playerInfo");
-        localStorage.removeItem("playerData");
-
-        playerName = null;
-        playerPassword = null;
-
-        document.getElementById("playerName").disabled = false;
-        document.getElementById("playerPassword").disabled = false;
-        document.getElementById("playerName").value = "";
-        document.getElementById("playerPassword").value = "";
-
-        location.reload();
-    }
-}
-
 function petBox() {
     const pet = document.getElementById("petBox");
     if (!musicMuted) sndSweden.play();
@@ -818,94 +1297,6 @@ window.addEventListener("load", function () {
     initGame();
     updShop();
 });
-
-function upgradePetSpeed() {
-    if (petTime <= MIN_PET_TIME) {
-        spawnFloatText(
-            window.innerWidth / 2,
-            window.innerHeight / 2,
-            "Max speed reached!"
-        );
-        return;
-    }
-
-    if (coins >= petSpeedCost && petOwned) {
-        coins -= petSpeedCost;
-        petTime = Math.max(MIN_PET_TIME, petTime - 100);
-        petSpeedCost = Math.floor(petSpeedCost * 2.5); // 75% increase
-
-        clearInterval(autoInterval);
-        autoInterval = setInterval(() => {
-            coins += power * petMultiplier;
-            updateStats();
-            const sword = document.getElementById("btnClick");
-            const rect = sword.getBoundingClientRect();
-            const x = rect.left + rect.width / 2;
-            const y = rect.top + rect.height / 2;
-            spawnFloatText(x, y, `+${power * petMultiplier}`);
-        }, petTime);
-
-        saveGame();
-        updShop();
-        spawnFloatText(
-            window.innerWidth / 2,
-            window.innerHeight / 2,
-            "Speed Upgraded!"
-        );
-        if (!soundMuted) sndMeow.play();
-    } else {
-        if (!soundMuted) sndHurt.play();
-        spawnFloatText(
-            window.innerWidth / 2,
-            window.innerHeight / 2,
-            "❌ Need more coins"
-        );
-    }
-}
-
-function upgradeSheepSpeed() {
-    if (sheepTime <= MIN_SHEEP_TIME) {
-        spawnFloatText(
-            window.innerWidth / 2,
-            window.innerHeight / 2,
-            "Max speed reached!"
-        );
-        return;
-    }
-
-    if (coins >= sheepSpeedCost && sheepOwned) {
-        coins -= sheepSpeedCost;
-        sheepTime = Math.max(MIN_SHEEP_TIME, sheepTime - 1000);
-        sheepSpeedCost = Math.floor(sheepSpeedCost * 3); // 75% increase
-
-        clearInterval(sheepAutoInterval);
-        sheepAutoInterval = setInterval(() => {
-            coins += power * sheepMultiplier;
-            updateStats();
-            const sword = document.getElementById("btnClick");
-            const rect = sword.getBoundingClientRect();
-            const x = rect.left + rect.width / 2;
-            const y = rect.top + rect.height / 2;
-            spawnFloatText(x, y, `+${power * sheepMultiplier}`);
-        }, sheepTime);
-
-        saveGame();
-        updShop();
-        spawnFloatText(
-            window.innerWidth / 2,
-            window.innerHeight / 2,
-            "Speed Upgraded!"
-        );
-        if (!soundMuted) sndBaa.play();
-    } else {
-        if (!soundMuted) sndHurt.play();
-        spawnFloatText(
-            window.innerWidth / 2,
-            window.innerHeight / 2,
-            "❌ Can't upgrade"
-        );
-    }
-}
 
 function showCredits() {
     const credits = document.getElementById("creditsBox");
@@ -968,9 +1359,11 @@ function loadLeaderboard() {
             const entryEl = document.createElement("div");
             entryEl.className = "leaderboard-entry";
             entryEl.innerHTML = `
-        <span>${index + 1}. ${entry.name}</span>
-        <span>${entry.score.toLocaleString()}</span>
-      `;
+                <span class="leaderboard-rank">${index + 1}.</span>
+                <span class="leaderboard-name">${entry.name}</span>
+                <span class="leaderboard-score">${entry.score.toLocaleString()}</span>
+                
+            `;
             list.appendChild(entryEl);
         });
     });
@@ -1060,7 +1453,9 @@ function showLoading(show) {
         : "none";
 }
 
-function enableScoreSubmission(name, pass, score) {
+function enableScoreSubmission(name, pass, score, rebirthCount) {
+    console.log("function called");
+    console.log(`rebirthcount: ${rebirthCount}`);
     const safeName = name.replace(/[^a-zA-Z0-9_-]/g, "_");
     const playerRef = database.ref("leaderboard/" + safeName);
 
@@ -1068,7 +1463,9 @@ function enableScoreSubmission(name, pass, score) {
         .set({
             name: name,
             password: pass, // Save password with entry 🔐
+
             score: score,
+            rebirths: rebirthCount,
             timestamp: firebase.database.ServerValue.TIMESTAMP
         })
         .then(() => {
@@ -1120,3 +1517,24 @@ window.addEventListener("load", () => {
         }, 200);
     }
 });
+
+function toggleRebirth() {
+    const rebirthElement = document.getElementById("rebirthScreen");
+
+    if (
+        rebirthElement.style.display === "none" ||
+        rebirthElement.style.display === ""
+    ) {
+        rebirthElement.style.display = "block";
+    } else {
+        rebirthElement.style.display = "none";
+    }
+
+    if (!soundMuted) sndClick.play();
+    document.getElementById(
+        "rebirthMultiplier"
+    ).innerHTML = `Rebirth Multiplier:${rebirthMultiplier}`;
+    document.getElementById(
+        "priceMultiplier"
+    ).innerHTML = `priceMultiplier:${priceMultiplier}`;
+}

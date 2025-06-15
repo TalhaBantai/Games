@@ -172,7 +172,31 @@
                         ></button>
                     </div>
                 </div>
-
+                <h3>Wolf 🐺</h3>
+                <div class="shopItem">
+                    <img src="wolf.png" alt="wolf" class="shopPetImg" />
+                    <div class="shopDetails">
+                        <p id="shopWolfText">Buy Wolf To help collect coins</p>
+                        <button
+                            id="btnBuyWolf"
+                            class="gameButton default-theme"
+                            onclick="buyWolf()"
+                        ></button>
+                        <button
+                            id="upgWolfSpeed"
+                            class="gameButton default-theme"
+                            onclick="upgradeWolfSpeed()"
+                        ></button>
+                    </div>
+                </div>
+                <h3>Rebirth</h3>
+                <button
+                    id="rebirthToggle"
+                    class="gameButton default-theme"
+                    onclick="toggleRebirth()"
+                >
+                    Rebirth
+                </button>
                 <h3>Themes 🎨</h3>
                 <div class="shopItem">
                     <button
@@ -208,7 +232,25 @@
                     Log Out
                 </button>
             </div>
-
+            <div id="rebirthScreen" class="shopBox default-theme">
+                <button
+                    onclick="toggleRebirth()"
+                    id="closeRebirthBtn"
+                    class="gameButton default-theme"
+                >
+                    ❌
+                </button>
+                <p>With every rebirth, Rebirth Multiplier goes by 1.</p>
+                <br />
+                <p>with evry rebirth price Multiplier increases by 0.25</p>
+                <p id="rebirthMultiplier"></p>
+                <p id="priceMultiplier"></p>
+                <button
+                    id="btnRebirth"
+                    class="gameButton"
+                    onclick="rebirth()"
+                ></button>
+            </div>
             <div id="floatContainer"></div>
             <div id="petBox" class="shopBox default-theme">
                 <button
@@ -242,7 +284,9 @@
             </div>
 
             <img id="sheepPet" src="sheep.png" class="pet" />
-
+            <img src="wolf.png" alt="wolf" id="wolfPet" />
+            <img src="wolf_sleeping.png" alt="wolfsleep" id="wolfPetSleeping" />
+            <img src="wolf_howling.png" alt="wolfhowl" id="wolfPetHowling" />
             <!-- Your existing buttons... -->
             <div id="creditsBox" class="shopBox default-theme">
                 <button
@@ -252,6 +296,7 @@
                 >
                     ❌
                 </button>
+
                 <h2>Credits</h2>
 
                 <div class="credits-content">

@@ -467,7 +467,8 @@ body.green-theme {
 /* Fix close buttons */
 #closePetBtn,
 #closeCreditsBtn,
-#closeLeaderboardBtn {
+#closeLeaderboardBtn,
+#closeRebirthbtn {
     position: sticky;
     top: 2%;
     left: 90%;
@@ -549,40 +550,6 @@ body.green-theme {
     font-size: 14px;
 }
 
-/* Leaderboard Styles */
-#leaderboardBox {
-    position: fixed;
-    top: 5vh; /* 👈 Slightly lower than top */
-    left: 50%;
-    transform: translateX(-50%); /* 👈 Perfect horizontal center */
-    width: 95vw;
-    max-height: 90vh; /* 👈 Almost full height of screen */
-    overflow-y: auto; /* Enable vertical scrolling */
-
-    padding: 10px;
-    z-index: 999999;
-    background-color: rgba(0, 0, 0, 0.7); /* Slightly darker */
-    border: 2px solid white;
-    border-radius: 10px;
-    color: #fff;
-    font-family: "pixel", sans-serif;
-    display: none;
-}
-
-.leaderboard-entry {
-    display: flex;
-    justify-content: space-between; /* Keeps name on left, score on right */
-    align-items: center;
-    padding: 8px 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    color: #f1f1f1;
-    text-align: left;
-    font-size: 16px;
-    white-space: nowrap; /* Prevents name from wrapping */
-    overflow: hidden;
-    text-overflow: ellipsis; /* Shows ... if too long */
-}
-
 #submitScoreForm {
     position: fixed;
     bottom: 20px;
@@ -602,6 +569,7 @@ body.green-theme {
     width: 90%;
     font-family: "PixelFont", sans-serif;
 }
+/* Leaderboard Styles */
 
 #leaderboardBox::-webkit-scrollbar {
     width: 6px;
@@ -662,19 +630,27 @@ body.green-theme {
 }
 
 /* Theme-based overrides */
-.default-theme #leaderboardBox {
+.default-theme #leaderboardBox,
+.default-theme #rebirthScreen,
+.default-theme #creditsBox {
     color: #cceeff; /* bright sky blue */
 }
 
-.pink-theme #leaderboardBox {
+.pink-theme #leaderboardBox,
+.pink-theme #rebirthScreen,
+.pink-theme #creditsBox {
     color: #ffe6fa; /* light pink */
 }
 
-.red-theme #leaderboardBox {
-    color: #ffcccc; /* soft rose */
+.red-theme #leaderboardBox,
+.red-theme #rebirthScreen,
+.red-theme #creditsBox {
+    color: #ffcccc;
 }
 
-.green-theme #leaderboardBox {
+.green-theme #leaderboardBox,
+.green-theme #rebirthScreen,
+.green-theme #creditsBox {
     color: #ccffe6; /* mint green */
 }
 
@@ -861,4 +837,360 @@ box-sizing: border-box;
 /* Green theme */
 .green-theme #shopBox {
     color: #ccffe6; /* mint green */
+}
+
+/* Add to style.css */
+.pet-cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.pet-card {
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    width: 300px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    transition:
+        transform 0.3s,
+        box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.pet-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+}
+
+.pet-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #444;
+    padding-bottom: 10px;
+}
+
+.pet-icon {
+    width: 60px;
+    height: 60px;
+    margin-right: 15px;
+    border-radius: 50%;
+    background-size: cover;
+}
+
+.pet-title {
+    font-size: 1.5em;
+    color: #ffcc00;
+}
+
+.pet-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.stat-label {
+    font-weight: bold;
+    color: #aaa;
+}
+
+.stat-value {
+    color: #fff;
+    text-align: right;
+}
+
+.upgrade-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.upgrade-btn:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+
+.strength-btn {
+    background: linear-gradient(to right, #ff9900, #ff6600);
+    color: #fff;
+}
+
+.speed-btn {
+    background: linear-gradient(to right, #6699ff, #3366cc);
+    color: #fff;
+}
+
+.pet-description {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+    border-left: 3px solid #ffcc00;
+}
+
+.pet-description p {
+    margin: 5px 0;
+    font-size: 0.9em;
+    color: #ccc;
+}
+
+.pet-level {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ffcc00;
+    color: #000;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.pet-unlocked {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 200, 0, 0.7);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8em;
+}
+
+#wolfPet,
+#wolfPetHowling {
+    max-height: 65px;
+    width: auto;
+    position: absolute;
+    bottom: 244px;
+    right: 80px;
+}
+
+#wolfPet {
+    display: none;
+}
+#wolfPetSleeping {
+    display: none;
+    max-height: 45px;
+    width: auto;
+    position: absolute;
+    bottom: 239px;
+    right: 72px;
+}
+#wolfPetHowling {
+    display: none;
+}
+
+#upgWolfSpeed {
+    display: none;
+}
+
+#rebirthScreen {
+    display: none;
+    position: absolute;
+    bottom: 200px;
+    z-index: 99999999;
+    padding: 30px;
+}
+
+/* Base Leaderboard Styles */
+/* Leaderboard Base Styles */
+#leaderboardBox {
+    position: fixed;
+    top: 5vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95vw;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: auto;
+    padding: 15px;
+    z-index: 999999;
+    border-radius: 8px;
+    font-family: "pixelFont", monospace;
+    display: none;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+}
+
+#leaderboardList {
+    display: inline-block;
+    min-width: max-content;
+}
+
+/* Leaderboard Grid Layout - Fixed overlapping columns */
+.leaderboard-entry {
+    display: grid;
+    grid-template-columns: 30px minmax(120px, auto) 100px 70px;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 5px;
+    border-bottom: 1px solid;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  width: 100%;
+box-sizing: border-box;
+}
+
+/* Column Styles - Prevent Overlapping */
+.leaderboard-entry span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.leaderboard-entry span:nth-child(1) {
+    /* Rank */
+    text-align: center;
+    font-weight: bold;
+    overflow: visible;
+}
+
+.leaderboard-entry span:nth-child(2) {
+    /* Name */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.leaderboard-entry span:nth-child(3) {
+    /* Score */
+    text-align: right;
+    font-feature-settings: "tnum";
+    padding-right: 5px;
+    overflow: visible;
+}
+
+.leaderboard-entry span:nth-child(4) {
+    /* Rebirths */
+    text-align: right;
+    font-weight: bold;
+    padding-right: 5px;
+    overflow: visible;
+}
+
+/* Close Button */
+#closeLeaderboardBtn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 3px;
+    font-family: "pixelFont", monospace;
+}
+
+/* Theme Variations */
+.default-theme #leaderboardBox {
+    background: rgba(30, 30, 30, 0.95);
+    border: 2px solid #517da2;
+    color: #cceeff;
+}
+.default-theme .leaderboard-entry {
+    border-bottom-color: rgba(81, 125, 162, 0.4);
+}
+.default-theme .leaderboard-entry span:nth-child(1) {
+    color: #88ccff;
+}
+.default-theme .leaderboard-entry span:nth-child(4) {
+    color: #55ffaa;
+}
+
+.pink-theme #leaderboardBox {
+    background: rgba(40, 10, 30, 0.95);
+    border: 2px solid #ff9fd6;
+    color: #ffe6fa;
+}
+.pink-theme .leaderboard-entry {
+    border-bottom-color: rgba(255, 159, 214, 0.4);
+}
+.pink-theme .leaderboard-entry span:nth-child(1) {
+    color: #ffb3e6;
+}
+.pink-theme .leaderboard-entry span:nth-child(4) {
+    color: #ff66d9;
+}
+
+.red-theme #leaderboardBox {
+    background: rgba(60, 10, 10, 0.95);
+    border: 2px solid #ff5555;
+    color: #ffcccc;
+}
+.red-theme .leaderboard-entry {
+    border-bottom-color: rgba(255, 85, 85, 0.4);
+}
+.red-theme .leaderboard-entry span:nth-child(1) {
+    color: #ff8888;
+}
+.red-theme .leaderboard-entry span:nth-child(4) {
+    color: #ff3333;
+}
+
+.green-theme #leaderboardBox {
+    background: rgba(10, 40, 10, 0.95);
+    border: 2px solid #27ae60;
+    color: #ccffe6;
+}
+.green-theme .leaderboard-entry {
+    border-bottom-color: rgba(39, 174, 96, 0.4);
+}
+.green-theme .leaderboard-entry span:nth-child(1) {
+    color: #66ff99;
+}
+.green-theme .leaderboard-entry span:nth-child(4) {
+    color: #00ff55;
+}
+
+/* Header and Empty State */
+#leaderboardBox h2 {
+    text-align: center;
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+#leaderboardList > p {
+    text-align: center;
+    padding: 20px;
+    opacity: 0.7;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+    .leaderboard-entry {
+        grid-template-columns: 25px minmax(90px, 1fr) 80px 50px;
+        gap: 8px;
+        font-size: 12px;
+    }
+
+    #leaderboardBox h2 {
+        font-size: 16px;
+    }
+
+    .leaderboard-entry span:nth-child(3),
+    .leaderboard-entry span:nth-child(4) {
+        padding-right: 3px;
+    }
+}
+
+/* Pixel Font Face */
+@font-face {
+    font-family: "pixelFont";
+    src: url("path-to-your-pixel-font.woff2") format("woff2");
+    font-display: swap;
 }
