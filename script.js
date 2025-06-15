@@ -325,7 +325,7 @@ function upgradePetSpeed() {
             const rect = sword.getBoundingClientRect();
             const x = rect.left + rect.width / 2;
             const y = rect.top + rect.height / 2;
-            spawnFloatText(x, y, `+${power * petMultiplier}`);
+            spawnFloatText(x, y, `+${power * petMultiplier * rebirthMultiplier}`);
         }, petTime);
 
         saveGame();
