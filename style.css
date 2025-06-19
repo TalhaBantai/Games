@@ -1,3 +1,15 @@
+
+button {
+  -webkit-tap-highlight-color: transparent; /* Removes grey/blue overlay on mobile */
+  outline: none; /* Removes default focus outline */
+  box-shadow: none; /* Removes inner shadows some browsers add */
+}
+
+button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 @font-face {
     font-family: "PixelFont";
     src: url("pixel.ttf") format("truetype");

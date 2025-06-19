@@ -518,171 +518,77 @@ function upgrade(event) {
 
 // Save game state
 function saveGame() {
-    if (!playerName || !playerPassword) return;
+  if (!playerName || !playerPassword) return;
 
-    const safeName = playerName.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const safeName = playerName.replace(/[^a-zA-Z0-9_-]/g, "_");
 
-    const gameState = {
-        coins,
-        power,
-        cost,
-        petOwned,
-        petUpgradeCost,
-        petMultiplier,
-        petTime,
-        petSpeedCost,
-        redThemeOwned,
-        greenThemeOwned,
-        currentTheme,
-        sheepCost,
-        sheepMultiplier,
-        sheepOwned,
-        sheepTime,
-        sheepSpeedCost,
-        wolfOwned,
-        wolfLevel,
-        wolfMultiplier,
-        wolfTime,
-        wolfSpeedCost,
-        wolfCost,
-        wolfSpeedLevel,
-        rebirthCount,
-        rebirthCost,
-        rebirthMultiplier,
-        priceMultiplier,
-        version: 2
-    };
+  const gameState = {
+    coins, power, cost, petOwned, petUpgradeCost, petMultiplier, petTime,
+    petSpeedCost, redThemeOwned, greenThemeOwned, currentTheme,
+    sheepCost, sheepMultiplier, sheepOwned, sheepTime, sheepSpeedCost,
+    wolfOwned, wolfLevel, wolfMultiplier, wolfTime, wolfSpeedCost,
+    wolfCost, wolfSpeedLevel, rebirthCount, rebirthCost,
+    rebirthMultiplier, priceMultiplier,
+    lastUpdated: Date.now()
+  };
 
-    // ☁️ Save game to cloud (Firebase)
-    database.ref("users/" + safeName).set({
-        password: playerPassword,
-        data: gameState
-    });
+  database.ref(`users/${safeName}`).set({
+    password: playerPassword,
+    data: gameState
+  });
 
-    // 🏆 Update leaderboard if new score is better
-    // 🏆 Update leaderboard if new score is better OR rebirth count changed
-    // 🏆 Update leaderboard (replace this part in saveGame())
-    const leaderboardRef = database.ref("leaderboard/" + safeName);
-    leaderboardRef.once("value").then(snapshot => {
-        const existing = snapshot.val();
-
-        // Prepare updated data object
-        const updatedData = {};
-
-        // Only update score if it's higher
-        if (!existing || coins > (existing.score || 0)) {
-            updatedData.score = coins;
-        }
-
-        // Only update rebirths if it's higher
-        if (!existing || rebirthCount > (existing.rebirths || 0)) {
-            updatedData.rebirths = rebirthCount;
-        }
-
-        if (Object.keys(updatedData).length > 0) {
-            updatedData.name = playerName;
-            updatedData.timestamp = firebase.database.ServerValue.TIMESTAMP;
-
-            leaderboardRef.update(updatedData).then(() => {
-                console.log("✅ Leaderboard updated with:", updatedData);
-            });
-        }
-    });
-    // 💾 Save locally under per-user key
-    localStorage.setItem("playerData_" + safeName, JSON.stringify(gameState));
+  localStorage.setItem(`playerData_${safeName}`, JSON.stringify(gameState));
 }
 
 // Load game state
-async function loadGame() {
-    if (!playerName || !playerPassword) return;
+function loadGame() {
+  if (!playerName || !playerPassword) return;
 
-    const safeName = playerName.replace(/[^a-zA-Z0-9_-]/g, "_");
-    const userRef = database.ref("users/" + safeName);
+  const safeName = playerName.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const userRef = database.ref(`users/${safeName}`);
 
-    try {
-        // 1️⃣ FIRST TRY: Load from Firebase (Cloud)
-        const snapshot = await userRef.once("value");
-        const cloudData = snapshot.val();
+  userRef.once("value").then((snapshot) => {
+    const userData = snapshot.val();
 
-        if (cloudData?.password === playerPassword) {
-            if (cloudData.data) {
-                // ✅ Cloud data exists and password matches
-                console.log("✅ Loaded from cloud successfully!");
-                applyGameState(cloudData.data);
-                return; // Exit early on success
-            } else {
-                console.warn(
-                    "⚠️ No cloud save found, falling back to localStorage..."
-                );
-            }
-        } else {
-            console.warn(
-                "⚠️ Invalid password or no cloud data, falling back to localStorage..."
-            );
-        }
-
-        // 2️⃣ SECOND TRY: Fallback to localStorage
-        const localData = getLocalStorageData(safeName);
-
-        if (localData) {
-            console.log("✅ Loaded from localStorage fallback!");
-            applyGameState(localData);
-
-            // Optional: Sync localStorage data back to cloud (if credentials are correct)
-            if (cloudData?.password === playerPassword || !cloudData) {
-                await userRef.set({
-                    password: playerPassword,
-                    data: localData
-                });
-                console.log("🔄 Local data synced to cloud!");
-            }
-        } else {
-            console.warn("❌ No local or cloud save found. Starting fresh.");
-        }
-    } catch (err) {
-        console.error(
-            "🌐 Cloud load failed, falling back to localStorage:",
-            err
-        );
-
-        // 3️⃣ THIRD TRY: If Firebase fails entirely, check localStorage
-        const localData = getLocalStorageData(safeName);
-
-        if (localData) {
-            console.log("✅ Loaded from localStorage after cloud failure!");
-            applyGameState(localData);
-
-            // Try to sync to cloud if possible (but don't block on errors)
-            userRef
-                .set({
-                    password: playerPassword,
-                    data: localData
-                })
-                .catch(e => console.error("Failed to sync to cloud:", e));
-        } else {
-            console.warn("❌ No local or cloud save found. Starting fresh.");
-        }
+    if (!userData || userData.password !== playerPassword) {
+      alert("No save found or wrong password!");
+      return;
     }
+
+    const cloudData = userData.data;
+    const localData = getLocalStorageData(safeName);
+
+    let chosenData;
+
+    if (cloudData && localData) {
+      chosenData = cloudData.lastUpdated >= localData.lastUpdated ? cloudData : localData;
+    } else {
+      chosenData = cloudData || localData;
+    }
+
+    if (chosenData) {
+      applyGameState(chosenData);
+
+      // If we used localData and it's newer, sync it to cloud
+      if (chosenData === localData && (!cloudData || localData.lastUpdated > cloudData.lastUpdated)) {
+        database.ref(`users/${safeName}`).set({
+          password: playerPassword,
+          data: localData
+        });
+      }
+    } else {
+      console.log("No save data found.");
+    }
+  });
 }
 
 // Helper function to get localStorage data (with legacy support)
 function getLocalStorageData(safeName) {
-    let localData = JSON.parse(localStorage.getItem("playerData_" + safeName));
-
-    // Fallback to old generic save if per-user doesn't exist
-    if (!localData) {
-        localData = JSON.parse(localStorage.getItem("playerData"));
-        if (localData) {
-            // Migrate to new format
-            localStorage.setItem(
-                "playerData_" + safeName,
-                JSON.stringify(localData)
-            );
-            localStorage.removeItem("playerData");
-        }
-    }
-
-    return localData;
+  try {
+    return JSON.parse(localStorage.getItem(`playerData_${safeName}`));
+  } catch {
+    return null;
+  }
 }
 
 function applyGameState(gameState) {
